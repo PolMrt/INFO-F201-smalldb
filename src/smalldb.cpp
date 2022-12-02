@@ -7,7 +7,11 @@
 #include <iostream>
 #include <string>
 
+#include "db.hpp"
+
 using namespace std;
+
+database_t *db;
 
 void *threadFct(void *ptr) {
   int *socket = (int*)ptr;
@@ -25,7 +29,20 @@ void *threadFct(void *ptr) {
   close(*socket);
 }
 
-int main() {
+int main(int argc, char const *argv[]) {
+  if (argc >= 2) {
+    const char *db_path = argv[1];
+    string db_path_str = "";
+    db_path_str.append(db_path);
+    cout << db_path_str << endl;
+
+    db_load(db, db_path);
+
+    cout << "smalldb: DB loaded (" + db_path_str + "): " + to_string(db->data.size()) + " students in database" << endl;
+  } else {
+    cout << "smalldb: creating a new empty DB" << endl;
+  }
+
   vector<int*> connections_sockets;
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 

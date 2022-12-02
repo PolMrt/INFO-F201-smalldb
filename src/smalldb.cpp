@@ -7,18 +7,26 @@
 #include <iostream>
 #include <string>
 
+using namespace std;
+
 void *threadFct(void *ptr) {
   int *socket = (int*)ptr;
 
-  printf("in thread\n");
   char buffer[1024];
-  read(*socket, buffer, 1024); printf("Message reçu:%s\n", buffer);
+  int read_response = read(*socket, buffer, 1024);
+
+  if (read_response > 0) {
+    printf("Message reçu:%s\n", buffer);
+  } else if (read_response == 0) {
+    cout << "smalldb: Client " + to_string(*socket) + " disconnected (normal). Closing connection and thread" << endl;
+  } else {
+    cout << "smalldb: Lost connection to client " + to_string(*socket) << endl;
+  }
   close(*socket);
 }
 
 int main() {
-  std::vector<pthread_t> threads_id;
-
+  vector<int*> connections_sockets;
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
   int opt = 1;
@@ -35,12 +43,13 @@ int main() {
   size_t addrlen = sizeof(address);
   
   while (1) {
-    int new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+    int *new_socket = new int(accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen));
 
+    connections_sockets.push_back(new_socket);
     pthread_t tid;
-    pthread_create(&tid, NULL, threadFct, &new_socket);
-    threads_id.push_back(tid);
-    std::cout << "smalldb: Accepted connection (" + std::to_string(threads_id.size()) + ")" << std::endl;
+    pthread_create(&tid, NULL, threadFct, new_socket);
+
+    cout << "smalldb: Accepted connection (" + to_string(*new_socket) + ")" << endl;
   }
   
   close(server_fd);

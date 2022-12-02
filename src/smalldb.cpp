@@ -21,9 +21,17 @@ void *thread_fct(void *ptr) {
   int read_response;
 
   while (read_response = read(*socket, buffer, 1024) > 0) {
-    const char *query = buffer;
-    printf("Message reçu:%s\n", buffer);
-    // parse_and_execute(nullptr, share_db, query);
+    query_result_t *query_result = new query_result_t;
+    query_result->query = buffer;
+
+    printf("Message reçu:%s\n", query_result->query);
+    parse_and_execute(query_result, share_db, query_result->query);
+    
+    for (auto result: query_result->students) {
+      cout << result.fname << " " << result.lname << endl;
+    }
+
+    delete query_result;
   }
 
   if (read_response == 0) {

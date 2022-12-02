@@ -1,8 +1,9 @@
 #include <arpa/inet.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <string>
+#include <iostream>
 
 int main(void) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -16,13 +17,14 @@ int main(void) {
 
   connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
   
-  char buffer[1024];
-  int longueur, i, ret;
+  // char buffer[1024];
+  // int longueur, i, ret;
+
+  std::string request;
   
-  while (fgets(buffer, 1024, stdin) != NULL) {
-     longueur = strlen(buffer) + 1;
+  while (std::getline(std::cin, request)) {
      printf("Envoi...\n");
-     write(sock, buffer, strlen(buffer) + 1);
+     write(sock, request.c_str(), request.length());
   }
   
   close(sock);

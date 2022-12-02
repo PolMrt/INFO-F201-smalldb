@@ -11,9 +11,9 @@
 
 using namespace std;
 
-database_t *db;
+database_t *share_db;
 
-void *threadFct(void *ptr) {
+void *thread_fct(void *ptr) {
   int *socket = (int*)ptr;
 
   char buffer[1024];
@@ -30,15 +30,18 @@ void *threadFct(void *ptr) {
 }
 
 int main(int argc, char const *argv[]) {
+  // init the db
+  share_db = new database_t;
+
   if (argc >= 2) {
+    // load file if provided
     const char *db_path = argv[1];
+    db_load(share_db, db_path);
+
     string db_path_str = "";
     db_path_str.append(db_path);
-    cout << db_path_str << endl;
 
-    db_load(db, db_path);
-
-    cout << "smalldb: DB loaded (" + db_path_str + "): " + to_string(db->data.size()) + " students in database" << endl;
+    cout << "smalldb: DB loaded (" + db_path_str + "): " + to_string(share_db->data.size()) + " students in database" << endl;
   } else {
     cout << "smalldb: creating a new empty DB" << endl;
   }
@@ -64,7 +67,7 @@ int main(int argc, char const *argv[]) {
 
     connections_sockets.push_back(new_socket);
     pthread_t tid;
-    pthread_create(&tid, NULL, threadFct, new_socket);
+    pthread_create(&tid, NULL, thread_fct, new_socket);
 
     cout << "smalldb: Accepted connection (" + to_string(*new_socket) + ")" << endl;
   }

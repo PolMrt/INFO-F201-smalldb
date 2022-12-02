@@ -8,6 +8,7 @@
 #include <string>
 
 #include "db.hpp"
+#include "queries.hpp"
 
 using namespace std;
 
@@ -17,11 +18,15 @@ void *thread_fct(void *ptr) {
   int *socket = (int*)ptr;
 
   char buffer[1024];
-  int read_response = read(*socket, buffer, 1024);
+  int read_response;
 
-  if (read_response > 0) {
+  while (read_response = read(*socket, buffer, 1024) > 0) {
+    const char *query = buffer;
     printf("Message reçu:%s\n", buffer);
-  } else if (read_response == 0) {
+    // parse_and_execute(nullptr, share_db, query);
+  }
+
+  if (read_response == 0) {
     cout << "smalldb: Client " + to_string(*socket) + " disconnected (normal). Closing connection and thread" << endl;
   } else {
     cout << "smalldb: Lost connection to client " + to_string(*socket) << endl;

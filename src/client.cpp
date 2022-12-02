@@ -19,7 +19,7 @@ int main(void) {
   char buffer[1024];
   int longueur, i, ret;
   
-  if (fgets(buffer, 1024, stdin) != NULL) {
+  while (fgets(buffer, 1024, stdin) != NULL) {
      longueur = strlen(buffer) + 1;
      printf("Envoi...\n");
      write(sock, buffer, strlen(buffer) + 1);

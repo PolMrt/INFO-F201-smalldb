@@ -2,6 +2,7 @@
 .vscode
 tinydb
 smalldb
+client
 logs/
 tests/*.output
 

@@ -3,6 +3,9 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <vector>
+#include <iostream>
+#include <string>
 
 void *threadFct(void *ptr) {
   int *socket = (int*)ptr;
@@ -14,6 +17,8 @@ void *threadFct(void *ptr) {
 }
 
 int main() {
+  std::vector<pthread_t> threads_id;
+
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
   int opt = 1;
@@ -29,12 +34,13 @@ int main() {
 
   size_t addrlen = sizeof(address);
   
-  
   while (1) {
     int new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
 
     pthread_t tid;
     pthread_create(&tid, NULL, threadFct, &new_socket);
+    threads_id.push_back(tid);
+    std::cout << "smalldb: Accepted connection (" + std::to_string(threads_id.size()) + ")" << std::endl;
   }
   
   close(server_fd);

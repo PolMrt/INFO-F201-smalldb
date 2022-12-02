@@ -38,18 +38,20 @@ int main(int argc, char const *argv[]) {
   // init the db
   share_db = new database_t;
 
-  if (argc >= 2) {
-    // load file if provided
-    const char *db_path = argv[1];
-    db_load(share_db, db_path);
-
-    string db_path_str = "";
-    db_path_str.append(db_path);
-
-    cout << "smalldb: DB loaded (" + db_path_str + "): " + to_string(share_db->data.size()) + " students in database" << endl;
-  } else {
-    cout << "smalldb: creating a new empty DB" << endl;
+  if (argc < 2) {
+    cout << "smalldb: error: please provide a path to the database";
+    return 1;
   }
+
+  // load file if provided
+  const char *db_path = argv[1];
+  db_load(share_db, db_path);
+
+  string db_path_str = "";
+  db_path_str.append(db_path);
+
+  cout << "smalldb: DB loaded (" + db_path_str + "): " + to_string(share_db->data.size()) + " students in database" << endl;
+
 
   vector<int*> connections_sockets;
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);

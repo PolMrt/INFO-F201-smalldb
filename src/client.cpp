@@ -5,6 +5,10 @@
 #include <string>
 #include <iostream>
 
+#include "queries.hpp"
+
+using namespace std;
+
 int main(void) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -23,8 +27,17 @@ int main(void) {
   std::string request;
   
   while (std::getline(std::cin, request)) {
-     printf("Envoi...\n");
-     write(sock, request.c_str(), request.length());
+    query_result_t *query_result;
+
+      printf("Envoi...\n");
+      write(sock, request.c_str(), request.length());
+
+      int read_response = read(sock, query_result, sizeof(query_result_t));
+      std::cout << read_response << std::endl;
+
+    //  for (auto res: query_result->students) {
+    //   std::cout << res.fname << std::endl;
+    //  }
   }
   
   close(sock);

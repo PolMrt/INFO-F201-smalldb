@@ -27,9 +27,10 @@ void *thread_fct(void *ptr) {
     printf("Message reçu:%s\n", query_result->query);
     parse_and_execute(query_result, share_db, query_result->query);
     
-    for (auto result: query_result->students) {
-      cout << result.fname << " " << result.lname << endl;
-    }
+    // for (auto result: query_result->students) {
+    //   cout << result.fname << " " << result.lname << endl;
+    // }
+    write(*socket, query_result, sizeof(query_result_t));
 
     delete query_result;
   }

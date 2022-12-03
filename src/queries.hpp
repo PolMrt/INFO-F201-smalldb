@@ -3,15 +3,20 @@
 
 #include <cstdio>
 #include <vector>
+#include <string>
 
 #include "db.hpp"
 
 typedef enum { QUERY_SUCCESS, QUERY_BAD_TYPE, QUERY_BAD_FORMAT, QUERY_TOO_LONG, QUERY_BAD_FILTER, QUERY_BAD_UPDATE } QUERY_STATUS;
+typedef enum { QUERY_SELECT, QUERY_UPDATE, QUERY_DELETE, QUERY_INSERT } QUERY_TYPE;
 typedef struct {
   std::vector<student_t> students; /** A list of students **/
   char* query;        /** The actual query that was submitted **/
-  QUERY_STATUS status; /** The return status of the query **/
+  QUERY_STATUS status = QUERY_SUCCESS; /** The return status of the query **/
+  QUERY_TYPE type;
 } query_result_t;
+
+std::string get_query_type(const query_result_t& query_result);
 
 // execute_* //////////////////////////////////////////////////////////////////
 

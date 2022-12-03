@@ -3,6 +3,7 @@
 tinydb
 smalldb
 client
+sdbsh
 logs/
 tests/*.output
 

@@ -1,8 +1,33 @@
 #include "queries.hpp"
 
 #include <iostream>
+#include <string>
 
 // #include "io.hpp"
+
+std::string get_query_type(const query_result_t& query_result) {
+  switch (query_result.type) {
+  case QUERY_SELECT:
+    return "selected";
+    break;
+
+  case QUERY_UPDATE:
+    return "updated";
+    break;
+
+  case QUERY_DELETE:
+    return "deleted";
+    break;
+
+  case QUERY_INSERT:
+    return "inserted";
+    break;
+  
+  default:
+    return "";
+    break;
+  }
+}
 
 // execute_* ///////////////////////////////////////////////////////////////////
 
@@ -13,6 +38,7 @@ void execute_select(query_result_t& query_result, database_t* const db, const ch
     query_fail_bad_filter(query_result, field, value);
     return;
   }
+  query_result.type = QUERY_SELECT;
   for (const student_t& s : db->data) {
     if (predicate(s)) {
       query_result.students.push_back(s);
@@ -31,9 +57,11 @@ void execute_update(query_result_t& query_result, database_t* const db, const ch
     query_fail_bad_update(query_result, efield, evalue);
     return;
   }
+  query_result.type = QUERY_UPDATE;
   for (student_t& s : db->data) {
     if (predicate(s)) {
       updater(s);
+      query_result.students.push_back(s);
     }
   }
 }
@@ -48,6 +76,9 @@ void execute_insert(query_result_t& query_result, database_t* const db, const ch
   snprintf(s->lname, sizeof(s->lname), "%s", lname);
   snprintf(s->section, sizeof(s->section), "%s", section);
   s->birthdate = birthdate;
+
+  query_result.type = QUERY_INSERT;
+  query_result.students.push_back(*s);
 }
 
 void execute_delete(query_result_t& query_result, database_t* const db, const char* const field,
@@ -59,6 +90,8 @@ void execute_delete(query_result_t& query_result, database_t* const db, const ch
   }
   auto new_end = remove_if(db->data.begin(), db->data.end(), predicate);
   db->data.erase(new_end, db->data.end());
+
+  query_result.type = QUERY_DELETE;
 }
 
 // parse_and_execute_* ////////////////////////////////////////////////////////

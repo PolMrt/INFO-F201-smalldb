@@ -6,10 +6,8 @@
 
 // execute_* ///////////////////////////////////////////////////////////////////
 
-void execute_select(query_result_t* query_result, database_t* const db, const char* const field,
+void execute_select(query_result_t& query_result, database_t* const db, const char* const field,
                     const char* const value) {
-
-  std::cout << "In select" << std::endl;
   std::function<bool(const student_t&)> predicate = get_filter(field, value);
   if (!predicate) {
     query_fail_bad_filter(query_result, field, value);
@@ -17,12 +15,12 @@ void execute_select(query_result_t* query_result, database_t* const db, const ch
   }
   for (const student_t& s : db->data) {
     if (predicate(s)) {
-      query_result->students.push_back(s);
+      query_result.students.push_back(s);
     }
   }
 }
 
-void execute_update(query_result_t* query_result, database_t* const db, const char* const ffield, const char* const fvalue, const char* const efield, const char* const evalue) {
+void execute_update(query_result_t& query_result, database_t* const db, const char* const ffield, const char* const fvalue, const char* const efield, const char* const evalue) {
   std::function<bool(const student_t&)> predicate = get_filter(ffield, fvalue);
   if (!predicate) {
     query_fail_bad_filter(query_result, ffield, fvalue);
@@ -40,7 +38,7 @@ void execute_update(query_result_t* query_result, database_t* const db, const ch
   }
 }
 
-void execute_insert(query_result_t* query_result, database_t* const db, const char* const fname,
+void execute_insert(query_result_t& query_result, database_t* const db, const char* const fname,
                     const char* const lname, const unsigned id, const char* const section,
                     const tm birthdate) {
   db->data.emplace_back();
@@ -52,7 +50,7 @@ void execute_insert(query_result_t* query_result, database_t* const db, const ch
   s->birthdate = birthdate;
 }
 
-void execute_delete(query_result_t* query_result, database_t* const db, const char* const field,
+void execute_delete(query_result_t& query_result, database_t* const db, const char* const field,
                     const char* const value) {
   std::function<bool(const student_t&)> predicate = get_filter(field, value);
   if (!predicate) {
@@ -65,7 +63,7 @@ void execute_delete(query_result_t* query_result, database_t* const db, const ch
 
 // parse_and_execute_* ////////////////////////////////////////////////////////
 
-void parse_and_execute_select(query_result_t* query_result, database_t* db, const char* const query) {
+void parse_and_execute_select(query_result_t& query_result, database_t* db, const char* const query) {
   char ffield[32], fvalue[64];  // filter data
   int  counter;
   if (sscanf(query, "select %31[^=]=%63s%n", ffield, fvalue, &counter) != 2) {
@@ -77,7 +75,7 @@ void parse_and_execute_select(query_result_t* query_result, database_t* db, cons
   }
 }
 
-void parse_and_execute_update(query_result_t* query_result, database_t* db, const char* const query) {
+void parse_and_execute_update(query_result_t& query_result, database_t* db, const char* const query) {
   char ffield[32], fvalue[64];  // filter data
   char efield[32], evalue[64];  // edit data
   int counter;
@@ -91,7 +89,7 @@ void parse_and_execute_update(query_result_t* query_result, database_t* db, cons
   }
 }
 
-void parse_and_execute_insert(query_result_t* query_result, database_t* db, const char* const query) {
+void parse_and_execute_insert(query_result_t& query_result, database_t* db, const char* const query) {
   char      fname[64], lname[64], section[64], date[11];
   unsigned  id;
   tm        birthdate;
@@ -105,7 +103,7 @@ void parse_and_execute_insert(query_result_t* query_result, database_t* db, cons
   }
 }
 
-void parse_and_execute_delete(query_result_t* query_result, database_t* db, const char* const query) {
+void parse_and_execute_delete(query_result_t& query_result, database_t* db, const char* const query) {
   char ffield[32], fvalue[64]; // filter data
   int counter;
   if (sscanf(query, "delete %31[^=]=%63s%n", ffield, fvalue, &counter) != 2) {
@@ -117,7 +115,7 @@ void parse_and_execute_delete(query_result_t* query_result, database_t* db, cons
   }
 }
 
-void parse_and_execute(query_result_t* query_result, database_t* db, const char* const query) {
+void parse_and_execute(query_result_t& query_result, database_t* db, const char* const query) {
   if (strncmp("select", query, sizeof("select")-1) == 0) {
     parse_and_execute_select(query_result, db, query);
   } else if (strncmp("update", query, sizeof("update")-1) == 0) {
@@ -133,23 +131,22 @@ void parse_and_execute(query_result_t* query_result, database_t* db, const char*
 
 // query_fail_* ///////////////////////////////////////////////////////////////
 
-void query_fail_bad_query_type(query_result_t* query_result) {
-  query_result->status = QUERY_BAD_TYPE;
+void query_fail_bad_query_type(query_result_t& query_result) {
+  query_result.status = QUERY_BAD_TYPE;
 }
 
-void query_fail_bad_format(query_result_t* query_result, const char * const query_type) {
-  query_result->status = QUERY_BAD_FORMAT;
+void query_fail_bad_format(query_result_t& query_result, const char * const query_type) {
+  query_result.status = QUERY_BAD_FORMAT;
 }
 
-void query_fail_too_long(query_result_t* query_result, const char * const query_type) {
-  query_result->status = QUERY_TOO_LONG;
+void query_fail_too_long(query_result_t& query_result, const char * const query_type) {
+  query_result.status = QUERY_TOO_LONG;
 }
 
-void query_fail_bad_filter(query_result_t* query_result, const char* const field, const char* const filter) {
-    query_result->status = QUERY_BAD_FILTER;
+void query_fail_bad_filter(query_result_t& query_result, const char* const field, const char* const filter) {
+    query_result.status = QUERY_BAD_FILTER;
 }
 
-void query_fail_bad_update(query_result_t* query_result, const char* const field, const char* const filter) {
-    query_result->status = QUERY_BAD_UPDATE;
+void query_fail_bad_update(query_result_t& query_result, const char* const field, const char* const filter) {
+    query_result.status = QUERY_BAD_UPDATE;
 }
-

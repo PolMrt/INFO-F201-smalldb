@@ -15,29 +15,22 @@ int main(void) {
   struct sockaddr_in serv_addr;
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(28772);
-
-  // Conversion de string vers IPv4 ou IPv6 en binaire
   inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
-
   connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-  
-  // char buffer[1024];
-  // int longueur, i, ret;
 
   std::string request;
-  
   while (std::getline(std::cin, request)) {
-    query_result_t *query_result;
+    query_result_t query_result;
+    printf("Envoi...\n");
+    cout << request << endl;
 
-      printf("Envoi...\n");
-      write(sock, request.c_str(), request.length());
+    write(sock, request.c_str(), request.length());
 
-      int read_response = read(sock, query_result, sizeof(query_result_t));
-      std::cout << read_response << std::endl;
-
-    //  for (auto res: query_result->students) {
-    //   std::cout << res.fname << std::endl;
-    //  }
+    char response_buffer[1024];
+    ssize_t bytes_read;
+    while (bytes_read = read(sock, response_buffer, 1024) > 0 && strcmp(response_buffer, "**") != 0) {
+      std::cout << response_buffer << std::endl;
+    }
   }
   
   close(sock);

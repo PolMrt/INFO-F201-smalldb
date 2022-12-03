@@ -6,6 +6,8 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <fstream>
+#include <cstdio>
 
 #include "db.hpp"
 #include "queries.hpp"
@@ -21,18 +23,28 @@ void *thread_fct(void *ptr) {
   int read_response;
 
   while (read_response = read(*socket, buffer, 1024) > 0) {
-    query_result_t *query_result = new query_result_t;
-    query_result->query = buffer;
+    query_result_t query_result;
+    query_result.query = buffer;
 
-    printf("Message reçu:%s\n", query_result->query);
-    parse_and_execute(query_result, share_db, query_result->query);
-    
-    // for (auto result: query_result->students) {
-    //   cout << result.fname << " " << result.lname << endl;
-    // }
-    write(*socket, query_result, sizeof(query_result_t));
+    printf("%s\n", buffer);
+    printf("Message reçu:%s\n", query_result.query);
 
-    delete query_result;
+    parse_and_execute(query_result, share_db, query_result.query);
+
+    char buffer_response[1024];
+    if (query_result.status == QUERY_SUCCESS) {
+      for (auto student: query_result.students) {
+        student_to_str(buffer_response, &student, 1024);
+        write(*socket, buffer_response, 1024);
+      }
+      snprintf(buffer_response, 1024, "%d student(s) selected", query_result.students.size());
+      write(*socket, buffer_response, 1024);
+      snprintf(buffer_response, 1024, "**");
+      write(*socket, buffer_response, 1024);
+    }
+
+    // Reset buffer value to nothing, so request do not overlap
+    memset(buffer, 0, 1024);
   }
 
   if (read_response == 0) {

@@ -11,6 +11,7 @@
 
 #include "db.hpp"
 #include "queries.hpp"
+#include "socket.hpp"
 
 using namespace std;
 
@@ -26,22 +27,8 @@ void *thread_fct(void *ptr) {
     query_result_t query_result;
     query_result.query = buffer;
 
-    printf("%s\n", buffer);
-    printf("Message reçu:%s\n", query_result.query);
-
     parse_and_execute(query_result, share_db, query_result.query);
-
-    char buffer_response[1024];
-    if (query_result.status == QUERY_SUCCESS) {
-      for (auto student: query_result.students) {
-        student_to_str(buffer_response, &student, 1024);
-        write(*socket, buffer_response, 1024);
-      }
-      snprintf(buffer_response, 1024, "%d student(s) selected", query_result.students.size());
-      write(*socket, buffer_response, 1024);
-      snprintf(buffer_response, 1024, "**");
-      write(*socket, buffer_response, 1024);
-    }
+    send_query_result(*socket, query_result);
 
     // Reset buffer value to nothing, so request do not overlap
     memset(buffer, 0, 1024);

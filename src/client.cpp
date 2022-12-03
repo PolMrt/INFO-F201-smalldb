@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "queries.hpp"
+#include "socket.hpp"
 
 using namespace std;
 
@@ -28,7 +29,7 @@ int main(void) {
 
     char response_buffer[1024];
     ssize_t bytes_read;
-    while (bytes_read = read(sock, response_buffer, 1024) > 0 && strcmp(response_buffer, "**") != 0) {
+    while (bytes_read = read(sock, response_buffer, 1024) > 0 && strcmp(response_buffer, RESULT_EN_MARKER.c_str()) != 0) {
       std::cout << response_buffer << std::endl;
     }
   }

@@ -89,6 +89,11 @@ void execute_delete(query_result_t& query_result, database_t* const db, const ch
     return;
   }
   auto new_end = remove_if(db->data.begin(), db->data.end(), predicate);
+
+  // For each student deleted, add it to the query result
+  for (auto s = new_end; s != db->data.end(); ++s) {
+    query_result.students.push_back(*s);
+  }
   db->data.erase(new_end, db->data.end());
 
   query_result.type = QUERY_DELETE;

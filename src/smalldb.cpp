@@ -23,7 +23,7 @@ void *thread_fct(void *ptr) {
   char buffer[1024];
   int read_response;
 
-  while (read_response = read(*socket, buffer, 1024) > 0) {
+  while ((read_response = read(*socket, buffer, 1024)) > 0) {
     query_result_t query_result;
     query_result.query = buffer;
 
@@ -40,6 +40,8 @@ void *thread_fct(void *ptr) {
     cout << "smalldb: Lost connection to client " + to_string(*socket) << endl;
   }
   close(*socket);
+  
+  return nullptr;
 }
 
 int main(int argc, char const *argv[]) {

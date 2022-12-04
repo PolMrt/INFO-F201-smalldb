@@ -2,6 +2,10 @@
 
 #include <iostream>
 #include <string>
+// #include <chrono>
+// #include <thread>
+
+#include "guard.hpp"
 
 // #include "io.hpp"
 
@@ -38,12 +42,20 @@ void execute_select(query_result_t& query_result, database_t* const db, const ch
     query_fail_bad_filter(query_result, field, value);
     return;
   }
+
+  read_guard_before();
+
+  // Used for testing mutex
+  // std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
   query_result.type = QUERY_SELECT;
   for (const student_t& s : db->data) {
     if (predicate(s)) {
       query_result.students.push_back(s);
     }
   }
+
+  read_guard_after();
 }
 
 void execute_update(query_result_t& query_result, database_t* const db, const char* const ffield, const char* const fvalue, const char* const efield, const char* const evalue) {
@@ -57,6 +69,9 @@ void execute_update(query_result_t& query_result, database_t* const db, const ch
     query_fail_bad_update(query_result, efield, evalue);
     return;
   }
+
+  write_guard_before();
+
   query_result.type = QUERY_UPDATE;
   for (student_t& s : db->data) {
     if (predicate(s)) {
@@ -64,11 +79,15 @@ void execute_update(query_result_t& query_result, database_t* const db, const ch
       query_result.students.push_back(s);
     }
   }
+
+  write_guard_after();
 }
 
 void execute_insert(query_result_t& query_result, database_t* const db, const char* const fname,
                     const char* const lname, const unsigned id, const char* const section,
                     const tm birthdate) {
+  write_guard_before();
+
   db->data.emplace_back();
   student_t *s = &db->data.back();
   s->id = id;
@@ -79,6 +98,8 @@ void execute_insert(query_result_t& query_result, database_t* const db, const ch
 
   query_result.type = QUERY_INSERT;
   query_result.students.push_back(*s);
+
+  write_guard_after();
 }
 
 void execute_delete(query_result_t& query_result, database_t* const db, const char* const field,
@@ -88,6 +109,9 @@ void execute_delete(query_result_t& query_result, database_t* const db, const ch
     query_fail_bad_filter(query_result, field, value);
     return;
   }
+
+  write_guard_before();
+
   auto new_end = remove_if(db->data.begin(), db->data.end(), predicate);
 
   // For each student deleted, add it to the query result
@@ -97,6 +121,8 @@ void execute_delete(query_result_t& query_result, database_t* const db, const ch
   db->data.erase(new_end, db->data.end());
 
   query_result.type = QUERY_DELETE;
+
+  write_guard_after();
 }
 
 // parse_and_execute_* ////////////////////////////////////////////////////////

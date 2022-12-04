@@ -15,7 +15,6 @@ jobs:
       - name: Run tests
         run: |
           cd tests
-          pgrep smalldb
-          ./run_tests.sh
+          bash ./run_tests.sh
         env:
           CI: true

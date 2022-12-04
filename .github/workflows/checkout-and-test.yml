@@ -1,0 +1,20 @@
+name: Build and test C++ code
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build C++ code
+        run: |
+          cd src
+          make
+      - name: Run tests
+        run: |
+          cd tests
+          ./test.sh
+        env:
+          CI: true

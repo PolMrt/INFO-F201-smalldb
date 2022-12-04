@@ -7,14 +7,15 @@
 
 #include "db.hpp"
 
-typedef enum { QUERY_SUCCESS, QUERY_BAD_TYPE, QUERY_BAD_FORMAT, QUERY_TOO_LONG, QUERY_BAD_FILTER, QUERY_BAD_UPDATE } QUERY_STATUS;
-typedef enum { QUERY_SELECT, QUERY_UPDATE, QUERY_DELETE, QUERY_INSERT } QUERY_TYPE;
-typedef struct {
+enum QUERY_STATUS { QUERY_SUCCESS, QUERY_BAD_TYPE, QUERY_BAD_FORMAT, QUERY_TOO_LONG, QUERY_BAD_FILTER, QUERY_BAD_UPDATE };
+enum QUERY_TYPE { QUERY_SELECT, QUERY_UPDATE, QUERY_DELETE, QUERY_INSERT };
+struct query_result_t {
   std::vector<student_t> students; /** A list of students **/
   char* query;        /** The actual query that was submitted **/
-  QUERY_STATUS status = QUERY_SUCCESS; /** The return status of the query **/
   QUERY_TYPE type;
-} query_result_t;
+  QUERY_STATUS status = QUERY_SUCCESS; /** The return status of the query **/
+  char error_message[1024];
+};
 
 std::string get_query_type(const query_result_t& query_result);
 

@@ -20,6 +20,8 @@ void send_query_result(int socket, const query_result_t &query_result) {
       snprintf(buffer_response, 1024, "%d student(s) %s", static_cast<int>(query_result.students.size()), get_query_type(query_result).c_str());
       write(socket, buffer_response, 1024);
     }
+  } else {
+    write(socket, query_result.error_message, sizeof(query_result.error_message));
   }
 
   snprintf(buffer_response, 1024, "%s", RESULT_EN_MARKER.c_str());

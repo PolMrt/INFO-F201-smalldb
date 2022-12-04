@@ -38,6 +38,8 @@ void *thread_fct(void *ptr) {
     cout << "smalldb: Client " + to_string(*socket) + " disconnected (normal). Closing connection and thread" << endl;
   } else {
     cout << "smalldb: Lost connection to client " + to_string(*socket) << endl;
+    cout << "smalldb: Closing connection " + to_string(*socket) << endl;
+    cout << "smalldb: Closing thread for connection " + to_string(*socket) << endl;
   }
   close(*socket);
   

@@ -36,8 +36,12 @@ int main(int argc, char const *argv[]) {
     while ((bytes_read = read(sock, response_buffer, 1024)) > 0 && strcmp(response_buffer, RESULT_EN_MARKER.c_str()) != 0) {
       std::cout << response_buffer << std::endl;
     }
+
+    if (bytes_read <= 0) {
+      cout << "sdbsh: lost connection with the server" << endl;
+      close(sock);
+      return 0;
+    }
   }
-  
-  close(sock);
   return 0;
 }

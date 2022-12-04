@@ -15,6 +15,6 @@ jobs:
       - name: Run tests
         run: |
           cd tests
-          ./test.sh
+          ./run_tests.sh
         env:
           CI: true

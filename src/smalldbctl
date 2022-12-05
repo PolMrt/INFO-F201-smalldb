@@ -1,4 +1,8 @@
 #!/bin/bash
+#remember to use chmod u+x smalldbctl
+#and chmod 744 smalldbctl
+#in terminal
+#syntax is : monitoring
 
 list(){
 pid=`pgrep smalldb`

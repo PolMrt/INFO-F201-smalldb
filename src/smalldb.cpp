@@ -33,6 +33,9 @@ void signal_handler(int signal) {
 
     db_save(share_db);
     exit(EXIT_SUCCESS);
+  } else if (signal == SIGUSR1) {
+    cout << "smalldb: saving the database" << endl;
+    db_save(share_db);
   } else {
     return;
   }
@@ -97,6 +100,7 @@ int main(int argc, char const *argv[]) {
 
   // Define signal handler for SIGINT
   sigaction(SIGINT, &action, NULL);
+  sigaction(SIGUSR1, &action, NULL);
 
   // Create the server
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -113,12 +117,13 @@ int main(int argc, char const *argv[]) {
   listen(server_fd, 3);
   
   size_t addrlen = sizeof(address);
-  sigset_t mask;
+  sigset_t mask_int, mask_usr1;
 
   while (1) {
     int new_socket = int(accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen));
 
-    block_sig(&mask, SIGINT);
+    block_sig(&mask_int, SIGINT);
+    block_sig(&mask_usr1, SIGUSR1);
 
     connections_sockets.push_back(new_socket);
     pthread_t tid;
@@ -126,7 +131,8 @@ int main(int argc, char const *argv[]) {
 
     cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
 
-    unblock_sig(&mask);
+    unblock_sig(&mask_int);
+    unblock_sig(&mask_usr1);
   }
   
   close(server_fd);

@@ -1,8 +1,8 @@
 #!/bin/bash
-#remember to use chmod u+x smalldbctl.sh
-#and chmod 744 smalldbctl.sh
+#remember to use chmod u+x smalldbctl
+#and chmod 744 smalldbctl
 #in terminal
-#syntax is : smalldbctl 
+#syntax is : smalldbctl {1 arg}
 
 list(){
 pid=`pgrep smalldb`
@@ -18,3 +18,4 @@ stop(){
 pid=`pgrep smalldb`
 kill -SIGINT "$pid"
 }
+$1

@@ -23,7 +23,7 @@ void db_load(database_t *db, const char *path) {
 
   if (fd_db < 0) {
     warn("Unable to open %s (loading DB)", path);
-    warnx("Starting with an empty DB.");
+    warnx("Starting with an empty DB");
     db->data.reserve(100);
     return;
   }
@@ -60,7 +60,7 @@ void db_load(database_t *db, const char *path) {
     err(FILE_ERROR, "Error while closing %s (after DB load)", path);
   }
 
-  // printf("%lu students found in the db.\n", size);
+  printf("smalldb: DB loaded (%s): %lu students found in the db.\n", db->path, size);
 
   // Le code ci-dessus n'est pas performant
   // à cause du trop grand nombre d'appel à read

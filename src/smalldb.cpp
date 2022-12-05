@@ -88,11 +88,6 @@ int main(int argc, char const *argv[]) {
   const char *db_path = argv[1];
   db_load(share_db, db_path);
 
-  string db_path_str = "";
-  db_path_str.append(db_path);
-
-  cout << "smalldb: DB loaded (" + db_path_str + "): " + to_string(share_db->data.size()) + " students in database" << endl;
-
   // Register signal handler
   struct sigaction action;
   action.sa_handler = signal_handler;

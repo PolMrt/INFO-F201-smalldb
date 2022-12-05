@@ -12,6 +12,7 @@
 #include <utility>    // std::move
 
 #include "errorcodes.hpp"
+#include "guard.hpp"
 
 void db_load(database_t *db, const char *path) {
   db->path = path;
@@ -22,7 +23,7 @@ void db_load(database_t *db, const char *path) {
 
   if (fd_db < 0) {
     warn("Unable to open %s (loading DB)", path);
-    warnx("Starting with an empty DB.");
+    warnx("Starting with an empty DB");
     db->data.reserve(100);
     return;
   }
@@ -59,7 +60,7 @@ void db_load(database_t *db, const char *path) {
     err(FILE_ERROR, "Error while closing %s (after DB load)", path);
   }
 
-  // printf("%lu students found in the db.\n", size);
+  printf("smalldb: DB loaded (%s): %lu students found in the db.\n", db->path, size);
 
   // Le code ci-dessus n'est pas performant
   // à cause du trop grand nombre d'appel à read
@@ -92,13 +93,18 @@ size_t db_delete(database_t *db, student_t *s) {
 }
 
 void db_save(database_t *db) {
+
   int fd_db = open(db->path, O_WRONLY | O_CREAT | O_TRUNC, 0640);
   if (fd_db < 0) {
     err(FILE_ERROR, "Unable to open %s (saving DB)", db->path);
   }
+
+  read_guard_before();
+  
   const char  *raw_data    = reinterpret_cast<char *>(db->data.data());
   const size_t total_bytes = db->data.size() * sizeof(student_t);
   size_t       left_bytes  = total_bytes;
+
   while (left_bytes > 0) {
     // write() can not write more than SSIZE_MAX bytes
     size_t  to_write_bytes = std::min(static_cast<size_t>(SSIZE_MAX), left_bytes);
@@ -111,4 +117,6 @@ void db_save(database_t *db) {
     }
     left_bytes -= static_cast<size_t>(written);
   }
+  
+  read_guard_after();
 }

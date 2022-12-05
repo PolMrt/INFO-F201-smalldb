@@ -22,17 +22,16 @@ vector<int> connections_sockets;
 bool server_stopping = false;
 
 void signal_handler(int signal) {
-  cout << "in sig handler" << endl;
   if (signal == SIGINT) {
     server_stopping = true;
+
     cout << "smalldb: stopping the server..." << endl;
 
-    // for (int socket_id: connections_sockets) {
-    //   cout << "smalldb: Closing connection " + std::to_string(socket_id) << endl;
-    //   close(socket_id);
-    // }
+    for (int socket_id: connections_sockets) {
+      close(socket_id);
+    }
 
-    // db_save(share_db);
+    db_save(share_db);
     exit(EXIT_SUCCESS);
   } else {
     return;
@@ -40,31 +39,35 @@ void signal_handler(int signal) {
 }
 
 void *thread_fct(void *ptr) {
-  int *socket = (int*)ptr;
+  int socket = (*(int*)ptr);
 
   char buffer[1024];
   int read_response;
 
-  while ((read_response = read(*socket, buffer, 1024)) > 0) {
+  while ((read_response = read(socket, buffer, 1024)) > 0) {
     query_result_t query_result;
     query_result.query = buffer;
 
     parse_and_execute(query_result, share_db, query_result.query);
-    send_query_result(*socket, query_result);
+    send_query_result(socket, query_result);
 
     // Reset buffer value to nothing, so request do not overlap
     memset(buffer, 0, 1024);
   }
 
   if (read_response == 0 && !server_stopping) {
-    cout << "smalldb: Client " + to_string(*socket) + " disconnected (normal). Closing connection and thread" << endl;
+    cout << "smalldb: Client " + to_string(socket) + " disconnected (normal). Closing connection and thread" << endl;
   } else if (!server_stopping) {
-    cout << "smalldb: Lost connection to client " + to_string(*socket) << endl;
-    cout << "smalldb: Closing connection " + to_string(*socket) << endl;
-    cout << "smalldb: Closing thread for connection " + to_string(*socket) << endl;
+    cout << "smalldb: Lost connection to client " + to_string(socket) << endl;
+    cout << "smalldb: Closing connection " + to_string(socket) << endl;
+    cout << "smalldb: Closing thread for connection " + to_string(socket) << endl;
+  } else {
+    cout << "smalldb: Closing connection " + to_string(socket) << endl;
+    cout << "smalldb: Closing thread for connection " + to_string(socket) << endl;
   }
-  close(*socket);
-  
+
+
+  close(socket);
   return nullptr;
 }
 
@@ -87,7 +90,13 @@ int main(int argc, char const *argv[]) {
   cout << "smalldb: DB loaded (" + db_path_str + "): " + to_string(share_db->data.size()) + " students in database" << endl;
 
   // Register signal handler
-  signal(SIGINT, &signal_handler);
+  struct sigaction action;
+  action.sa_handler = signal_handler;
+  sigemptyset(&action.sa_mask);
+  action.sa_flags = 0;
+
+  // Define signal handler for SIGINT
+  sigaction(SIGINT, &action, NULL);
 
   // Create the server
   int server_fd = socket(AF_INET, SOCK_STREAM, 0);

@@ -1,6 +1,6 @@
 #!/bin/bash
-#remember to use chmod u+x smalldbctl
-#and chmod 744 smalldbctl
+#chmod u+x smalldbctl
+#chmod 744 smalldbctl
 #in terminal
 #syntax is : smalldbctl {1 arg}
 

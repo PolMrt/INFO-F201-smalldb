@@ -25,6 +25,7 @@ void signal_handler(int signal) {
   if (signal == SIGINT) {
     server_stopping = true;
 
+    cout << endl; // Break line after ^C
     cout << "smalldb: stopping the server..." << endl;
 
     for (int socket_id: connections_sockets) {
@@ -121,18 +122,35 @@ int main(int argc, char const *argv[]) {
 
   while (1) {
     int new_socket = int(accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen));
+    if (new_socket > 0) {
+      // Accepting the socket was successfull
 
-    block_sig(&mask_int, SIGINT);
-    block_sig(&mask_usr1, SIGUSR1);
+      // Block signals while accepting connection
+      block_sig(&mask_int, SIGINT);
+      block_sig(&mask_usr1, SIGUSR1);
 
-    connections_sockets.push_back(new_socket);
-    pthread_t tid;
-    pthread_create(&tid, NULL, thread_fct, &new_socket);
+      // Save the file descriptor in a vector
+      connections_sockets.push_back(new_socket);
 
-    cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
+      // Creating the thread
+      pthread_t tid;
+      pthread_create(&tid, NULL, thread_fct, &new_socket);
 
-    unblock_sig(&mask_int);
-    unblock_sig(&mask_usr1);
+      cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
+
+      // Unblock signal in the main thread (here)
+      unblock_sig(&mask_int);
+      unblock_sig(&mask_usr1);
+    } else {
+      // An error occured while accepting socket
+      if (errno != EINTR) {
+        // If the errno is EINTR (Interrupted system call), it meand the accept was interrupted
+        // by SIGUSR1. There's nothing to do in that case, only if we are not in that case.
+        perror("smalldb: an unexpected error occured while accepting a new connection");
+      }
+    }
+
+   
   }
   
   close(server_fd);

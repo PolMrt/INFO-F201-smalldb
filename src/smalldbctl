@@ -1,32 +1,21 @@
-
-
-main_process(){
-difpid=`pgrep smalldb`  # process's pid(s)
-declare -a array_main_process  #array with all the main process
-for pid in $difpid
-do
-ret=`pgrep -P $pid | wc -l`            # ret is number of child processes using a wc
-if [ "$ret" -ne 0 ];  #if children !=0
-    then  
-    array_main_process+=("$pid")
-fi
-done
-echo ${array_main_process[@]}
-}
-
+#!/bin/bash
+#remember to use chmod u+x smalldbctl
+#and chmod 744 smalldbctl
+#in terminal
+#syntax is : smalldbctl {1 arg}
 
 list(){
-declare -a list_main_process="$(main_process)"
-for pid in $list_main_process
-do
-kill -SIGUSR2
-done
+pid=`pgrep smalldb`
+lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d: -f1
 }
 
 sync(){
-kill -SIGUSR1 ???? pid ?????
+pid=`pgrep smalldb`
+kill -SIGUSR1 "$pid"
 }
 
 stop(){
-kill -SIGINT ???? pid ?????
+pid=`pgrep smalldb`
+kill -SIGINT "$pid"
 }
+$1

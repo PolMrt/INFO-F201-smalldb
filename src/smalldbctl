@@ -30,7 +30,7 @@ lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d- -f2 | sed 's/>//g' | cu
     # -f2 : specifies the field or fields to extract (in our case, 2)
 # sed 's/>//g' : search and replace text in the output of cut, 's' is used to search for '>' and 'g' to replace it by an empty string
 # cut -d: -f1 : delimiter (":"), extract the field 1 (first)
-# sed 's/*//g' : replace '*' by an empty string 
+# sed '1d' : remove the first line (which is a '*')
 }
 
 # Send a signal SIGUSR1 to the process of the database

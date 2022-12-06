@@ -197,25 +197,25 @@ void parse_and_execute(query_result_t& query_result, database_t* db, const char*
 
 void query_fail_bad_query_type(query_result_t& query_result) {
   query_result.status = QUERY_BAD_TYPE;
-  snprintf(query_result.error_message, sizeof(query_result.error_message), "Unknown query type");
+  snprintf(query_result.error_message, sizeof(query_result.error_message), "Error: unknown query type");
 }
 
 void query_fail_bad_format(query_result_t& query_result, const char * const query_type) {
   query_result.status = QUERY_BAD_FORMAT;
-  snprintf(query_result.error_message, sizeof(query_result.error_message), "Syntax error in %s", query_type);
+  snprintf(query_result.error_message, sizeof(query_result.error_message), "Error: syntax error in %s", query_type);
 }
 
 void query_fail_too_long(query_result_t& query_result, const char * const query_type) {
   query_result.status = QUERY_TOO_LONG;
-  snprintf(query_result.error_message, sizeof(query_result.error_message), "Syntax error in %s", query_type);
+  snprintf(query_result.error_message, sizeof(query_result.error_message), "Error: syntax error in %s", query_type);
 }
 
 void query_fail_bad_filter(query_result_t& query_result, const char* const field, const char* const filter) {
   query_result.status = QUERY_BAD_FILTER;
-  snprintf(query_result.error_message, sizeof(query_result.error_message), "%s=%s is not a valid filter", field, filter);
+  snprintf(query_result.error_message, sizeof(query_result.error_message), "Error: %s=%s is not a valid filter", field, filter);
 }
 
 void query_fail_bad_update(query_result_t& query_result, const char* const field, const char* const filter) {
   query_result.status = QUERY_BAD_UPDATE;
-  snprintf(query_result.error_message, sizeof(query_result.error_message), "You can not apply %s=%s", field, filter);
+  snprintf(query_result.error_message, sizeof(query_result.error_message), "Error: you can not apply %s=%s", field, filter);
 }

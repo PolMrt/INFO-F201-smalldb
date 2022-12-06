@@ -80,7 +80,7 @@ int main(int argc, char const *argv[]) {
   share_db = new database_t;
 
   if (argc < 2) {
-    cout << "smalldb: error: please provide a path to the database";
+    cout << "smalldb: error: please provide a path to the database" << endl;
     return 1;
   }
 

@@ -33,6 +33,66 @@
 
 \section{Introduction}
 
-Ce projet est la prolongation de la première partie "tinydb" en prenant une nouvelle approche. Le but est le même la réalisation d'une base de données en C++. Ici le serveur est différencié du client et communiquent ensemble via des socket. Aussi, les requêtes des différents clients seront maitenant gérés par des threads individuels.
+Ce projet est la prolongation de la première partie "tinydb" en prenant une nouvelle approche. Le but est le même : la réalisation d'une base de données en C++. Ici le serveur est différencié du client et communiquent ensemble via des sockets. Aussi, les requêtes des différents clients seront maitenant gérés par des threads individuels. Cette nouvelle approche soulève des questions concernant l'implémentation. Il faudra faire attention au niveau de l'accès concurrent à la base de données, trouver un moyen de passer les réponses au client, etc.
+
+Dans ce rapport nous allons décrire notre implémentation, revenir sur certains points qui nous ont posés problèmes et comparer cette nouvelle implémentation à la précédente.
+
+\section{Implémentation serveur client}
+
+\subsection{Implémentation des mutex}
+
+Pour éviter les accès concurrents à la base de données, nous avons du implémenter des mutex. Nous avons utilisé le pseudo-code fournit dans l'énoncé pour créer 4 fonctions qui sont appelés avant et après les lectures et les écritures. L'implémentations de celles-ci se trouve dans le fichier \texttt{guard.cpp}. Voici l'explication de son fonctionnement :
+\begin{enumerate}
+	\item Nous créons une mutex \texttt{new\_access} qui sera utilisé pour bloquer le processus de registration du lecteur ou de l'écrivain. Elle sera bloqué au début de chaque fonction \texttt{\_before} et unlock à la fin,
+	\item Nous créons une mutex \texttt{write\_access} qui permet de restreindre l'accès à un unique écrivain à la fois. La fonction \texttt{write\_guard\_before} la verrouillera et la fonction \texttt{write\_guard\_after} la déverrouillera,
+	\item Nous créons une mutex \texttt{reader\_registration} qui restreindra l'accès à la variable \texttt{readers\_count} pour éviter que deux threads la modifies en même temps,
+	\item Ensuite, dans la fonction \texttt{read\_guard\_before} on regarde s'il n'y a pas encore de lecteur, si c'est le cas, nous bloquerons l'écriture et incrémenterons le nombre de lecteur,
+	\item Finalement dans la fonction \texttt{read\_guard\_after} on décrémentera le nombre de lecteur et si celui-ci est maintenant à 0, nous déverrouillerons l'accès à l'écriture.
+\end{enumerate}
+
+Cette approche peut sembler à première approche complexe. Mais celle-ci évite les soucis de famine.
+
+\subsection{Difficultés rencontrés}
+
+\subsubsection{Communication des résultats au client}
+
+Pour communiquer les résultats d'une requête envoyé par le client au serveur nous avons d'abord essayé de transmettre au client un structure \texttt{query\_result\_t}. Cette structure contins un \texttt{std::vector} des étudiants sélectionnés, la requête, le type de requête (SELECT, etc), l'état de la requête et éventuellement un message d'erreur. Nous avons donc essayé d'envoyer cette structure au client pour qu'il puisse lire les résultats de sa requête. Voici le bout de code que nous avons essayé :
+\begin{lstlisting}
+write(socket, query_result, sizeof(query_result_t));
+\end{lstlisting}
+	
+	Nous n'avons pas réussi à faire fonctionner la communication avec cette approche. Nous en avons déduit que communiquer un \texttt{std::vector} via les sockets n'était pas trivial. Nous avons aussi essayé avec une liste dans le style de C (avec des pointeurs) mais le soucis restait.
+	
+	Nous avons donc opter pour une autre solution : envoyer ligne par ligne les résultats à imprimer chez le client. Nous avons défini un marqueur d'arrête (\texttt{**} en l'occurence) qui indiquera au client la fin des réponses a afficher dans le terminal. Cette solution fonctionne mais nous laisse perplexe au niveau de la charge réseaux, une autre implémentation nécessitant moins de \texttt{read} et \texttt{write} pourrait être optimal. Voici un bout de code de notre implémentation :
+
+\begin{lstlisting}
+// Server
+for (auto student: query_result.students) {
+	student_to_str(buffer_response, &student, 1024);
+	write(socket, buffer_response, 1024);
+}
+snprintf(buffer_response, 1024, "%s", RESULT_EN_MARKER.c_str());
+write(socket, buffer_response, 1024);
+
+// Client 
+while ((bytes_read = read(sock, response_buffer, 1024)) > 0
+	&& strcmp(response_buffer, RESULT_EN_MARKER.c_str()) != 0) {
+	std::cout << response_buffer << std::endl;
+}
+\end{lstlisting}
+
+\subsubsection{Nombre d'étudiants supprimés}
+
+Quand un client exécute la requête \texttt{delete filter=value}, le serveur supprime les éléments et renvoie au client \texttt{n student(s) deleted}. Le code fournit pour ce projet contenait déjà la logique de la fonction delete mais pas un moyen de récupérer facilement le nombre d'étudiant supprimé. Cette fonction utilise \texttt{remove\_if} qui retourne un itérateur sur le vecteur. Pour compter les éléments nous avons itéré sur les éléments supprimés pour les compter. Voici un bout de code de l'implémentation :
+
+\begin{lstlisting}
+auto new_end = remove_if(db->data.begin(), db->data.end(), predicate);
+
+for (auto s = new_end; s != db->data.end(); ++s) {
+	query_result.students.push_back(*s);
+}
+\end{lstlisting}
+
+\section{Comparaison avec la première partie}
 
 \end{document}

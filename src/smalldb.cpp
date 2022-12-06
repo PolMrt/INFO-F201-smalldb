@@ -143,7 +143,9 @@ int main(int argc, char const *argv[]) {
       new_client(&mask_int, &mask_usr1, new_socket);
     } else {
       // An error occured while accepting socket
-      if (errno != EINTR) perror("smalldb: an unexpected error occured while accepting a new connection");
+      if (errno != EINTR) {
+        perror("smalldb: an unexpected error occured while accepting a new connection");
+      }
       // If the errno is EINTR (Interrupted system call), it meand the accept was interrupted
       // by SIGUSR1. There's nothing to do in that case, only if we are not in that case.
     }

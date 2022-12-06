@@ -1,4 +1,4 @@
-CXXFLAGS+=-std=c++17 -g -Wall -Wextra -Wpedantic -D_GNU_SOURCE -Werror=all
+CXXFLAGS+=-std=c++17 -Wall -Wextra -Wpedantic -D_GNU_SOURCE -Werror=all
 #CXX=g++
 LDLIBS+=-lpthread
 SOURCES = $(wildcard *.cpp */*.cpp)

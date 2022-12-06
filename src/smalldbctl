@@ -5,16 +5,18 @@
 
 list(){
 pid=`pgrep smalldb`
-lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d: -f1
+lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d: -f1 | sed 's/*//g'
+#
+#
 }
 
 sync(){
 pid=`pgrep smalldb`
-kill -SIGUSR1 "$pid"
+kill -SIGUSR1 $pid
 }
 
 stop(){
 pid=`pgrep smalldb`
-kill -SIGINT "$pid"
+kill -SIGINT $pid
 }
 $1

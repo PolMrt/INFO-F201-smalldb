@@ -75,6 +75,27 @@ void *thread_fct(void *ptr) {
   return nullptr;
 }
 
+
+void new_client(sigset_t *mask_int,sigset_t *mask_usr1, int new_socket){
+  // Block signals while accepting connection
+      block_sig(mask_int, SIGINT);
+      block_sig(mask_usr1, SIGUSR1);
+
+      // Save the file descriptor in a vector
+      connections_sockets.push_back(new_socket);
+
+      // Creating the thread
+      pthread_t tid;
+      pthread_create(&tid, NULL, thread_fct, &new_socket);
+
+      cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
+
+      // Unblock signal in the main thread (here)
+      unblock_sig(mask_int);
+      unblock_sig(mask_usr1);
+}
+
+
 int main(int argc, char const *argv[]) {
   // init the db
   share_db = new database_t;
@@ -119,35 +140,14 @@ int main(int argc, char const *argv[]) {
     int new_socket = int(accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen));
     if (new_socket > 0) {
       // Accepting the socket was successfull
-
-      // Block signals while accepting connection
-      block_sig(&mask_int, SIGINT);
-      block_sig(&mask_usr1, SIGUSR1);
-
-      // Save the file descriptor in a vector
-      connections_sockets.push_back(new_socket);
-
-      // Creating the thread
-      pthread_t tid;
-      pthread_create(&tid, NULL, thread_fct, &new_socket);
-
-      cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
-
-      // Unblock signal in the main thread (here)
-      unblock_sig(&mask_int);
-      unblock_sig(&mask_usr1);
+      new_client(&mask_int, &mask_usr1, new_socket);
     } else {
       // An error occured while accepting socket
-      if (errno != EINTR) {
-        // If the errno is EINTR (Interrupted system call), it meand the accept was interrupted
-        // by SIGUSR1. There's nothing to do in that case, only if we are not in that case.
-        perror("smalldb: an unexpected error occured while accepting a new connection");
-      }
+      if (errno != EINTR) perror("smalldb: an unexpected error occured while accepting a new connection");
+      // If the errno is EINTR (Interrupted system call), it meand the accept was interrupted
+      // by SIGUSR1. There's nothing to do in that case, only if we are not in that case.
     }
-
-   
   }
-  
   close(server_fd);
 
   return 0;

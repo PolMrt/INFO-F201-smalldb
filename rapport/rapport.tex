@@ -1,0 +1,38 @@
+\documentclass[utf8]{article}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[parfill]{parskip}
+
+\usepackage{floatrow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{listingsutf8}
+\usepackage{multirow}
+
+\usepackage{fullpage}
+
+% -----------------------------------------------------
+
+
+\title{INFO-F201 SmallDB : rapport}
+\author{MARKOWITCH Romain \and HENNEBICQ Jérémy\and MARNETTE Pol}
+\date{16 décembre 2022}
+
+\renewcommand{\contentsname}{Table des matières}
+\begin{document}
+\maketitle
+\tableofcontents
+
+\newpage
+
+% -----------------------------------------------------
+
+\section{Introduction}
+
+Ce projet est la prolongation de la première partie "tinydb" en prenant une nouvelle approche. Le but est le même la réalisation d'une base de données en C++. Ici le serveur est différencié du client et communiquent ensemble via des socket. Aussi, les requêtes des différents clients seront maitenant gérés par des threads individuels.
+
+\end{document}

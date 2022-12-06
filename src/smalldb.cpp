@@ -78,21 +78,21 @@ void *thread_fct(void *ptr) {
 
 void new_client(sigset_t *mask_int,sigset_t *mask_usr1, int new_socket){
   // Block signals while accepting connection
-      block_sig(mask_int, SIGINT);
-      block_sig(mask_usr1, SIGUSR1);
+  block_sig(mask_int, SIGINT);
+  block_sig(mask_usr1, SIGUSR1);
+  
+  // Save the file descriptor in a vector
+  connections_sockets.push_back(new_socket);
 
-      // Save the file descriptor in a vector
-      connections_sockets.push_back(new_socket);
+  // Creating the thread
+  pthread_t tid;
+  pthread_create(&tid, NULL, thread_fct, &new_socket);
 
-      // Creating the thread
-      pthread_t tid;
-      pthread_create(&tid, NULL, thread_fct, &new_socket);
+  cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
 
-      cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
-
-      // Unblock signal in the main thread (here)
-      unblock_sig(mask_int);
-      unblock_sig(mask_usr1);
+  // Unblock signal in the main thread (here)
+  unblock_sig(mask_int);
+  unblock_sig(mask_usr1);
 }
 
 

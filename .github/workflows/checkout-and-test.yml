@@ -16,5 +16,13 @@ jobs:
         run: |
           cd tests
           bash ./run_tests.sh
+      - name: Start the database
+        run: ./smalldb students-data.bin
+      - name: Create a client and send data to the database
+        run: |
+          ./sdbsh
+          insert Romain Markowitch 1 Info 05/05/2003
+          insert Pol Marnette 2 Info 12/07/2001
+          select fname=Pol
         env:
           CI: true

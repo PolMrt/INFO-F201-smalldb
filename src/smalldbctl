@@ -19,7 +19,7 @@ pid=`pgrep smalldb` # get the PID of the process of the database
 
 # Display the IP adresses of all the clients connected to the server
 list(){
-lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d: -f2 | cut -d- -f2 | sed 's/>//g'
+lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d- -f2 | sed 's/>//g' | cut -d: -f1 | sed 's/*//g'
 # lsof : used to list open files, including network connections
 # -i : tells lsof to display only network connections
 # -P and -n : display the numerical IP addresses and port numbers

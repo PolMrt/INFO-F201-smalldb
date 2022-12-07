@@ -95,4 +95,11 @@ for (auto s = new_end; s != db->data.end(); ++s) {
 
 \section{Comparaison avec la première partie}
 
+\subsection{Pipe et sockets}
+
+Un des changements majeur qu'apporte la seconde partie du projet est la communication via sockets entre le client et le serveur. Dans la première partie, nous utilisions les pipes, non pas pour communiquer entre le client et le serveur mais pour communiquer entre les processus gérants les requêtes et le processus principale qui communique avec l'utilisateur.
+
+\subsection{Processus et threads}
+
+
 \end{document}

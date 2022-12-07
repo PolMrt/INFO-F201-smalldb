@@ -21,7 +21,8 @@ void create_server(int &server_fd, struct sockaddr_in &address) {
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons(28772);
 
-  // int bind_return = static_cast<int>(bind(server_fd, (struct sockaddr *)&address, sizeof(address)));
+  // This was an attempt to check if binding the server to the adress was successful.
+  // int bind_return = (bind(server_fd, (struct sockaddr *)&address, sizeof(address)));
   // if (bind_return < 0) {
   //   perror("smalldb: error when binding the server\n");
   // }

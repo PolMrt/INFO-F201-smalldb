@@ -19,6 +19,7 @@ using namespace std;
 
 database_t *share_db;
 vector<int> connections_sockets;
+int server_fd;
 bool server_stopping = false;
 
 void signal_handler(int signal) {
@@ -33,6 +34,7 @@ void signal_handler(int signal) {
     }
 
     db_save(share_db);
+    close(server_fd);
     exit(EXIT_SUCCESS);
   } else if (signal == SIGUSR1) {
     cout << "smalldb: saving the database" << endl;
@@ -119,7 +121,6 @@ int main(int argc, char const *argv[]) {
   sigaction(SIGINT, &action, NULL);
   sigaction(SIGUSR1, &action, NULL);
 
-  int server_fd;
   struct sockaddr_in address;
 
   create_server(server_fd, address);

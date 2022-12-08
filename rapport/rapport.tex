@@ -19,7 +19,7 @@
 
 
 \title{INFO-F201 SmallDB : rapport}
-\author{MARKOWITCH Romain \and HENNEBICQ Jérémy\and MARNETTE Pol}
+\author{HENNEBICQ Jérémy\and MARKOWITCH Romain \and MARNETTE Pol}
 \date{16 décembre 2022}
 
 \renewcommand{\contentsname}{Table des matières}
@@ -93,13 +93,27 @@ for (auto s = new_end; s != db->data.end(); ++s) {
 }
 \end{lstlisting}
 
+\section{Tests additionnels}
+
+Afin de tester notre implémentation, nous avons dans un premier temps créé une "Github Action" pour compiler afin tester notre code à chaque nouveaux commit. Celui-ci se contentait de lancer \texttt{make} afin de compiler le code et lançait ensuite le script bash fournit qui contient les différents tests. Dans un second temps, nous avons déployé la partie "smalldb" (le serveur) sur une machine virtuelle distante pour tester notre code dans des conditions plus concrètes.
+
+Nous laisserons le serveur en ligne, vous pouvez donc essayer de vous y connecter sur l'adresse IP \texttt{142.132.176.27}, comme suit :
+
+\begin{lstlisting}
+./sdbsh 142.132.176.27
+\end{lstlisting}
+
+
 \section{Comparaison avec la première partie}
 
 \subsection{Pipe et sockets}
 
 Un des changements majeur qu'apporte la seconde partie du projet est la communication via sockets entre le client et le serveur. Dans la première partie, nous utilisions les pipes, non pas pour communiquer entre le client et le serveur mais pour communiquer entre les processus gérants les requêtes et le processus principale qui communique avec l'utilisateur.
 
+Cette nouvelle approche se rapproche plus de ce que l'on pourrait retrouver en réalité. 
+
 \subsection{Processus et threads}
 
+Dans cette nouvelle partie, nous exécutons les requêtes des clients de manière parallèle sur des threads différents. Dans la première partie, nous avions séparé l'exécution de chaque type de requête dans des processus différents.
 
 \end{document}

@@ -10,6 +10,14 @@
 
 using namespace std;
 
+void check_disconnected_rw(size_t value, int sock) {
+  if (value <= 0) {
+    cout << "sdbsh: lost connection with the server" << endl;
+    close(sock);
+    exit(EXIT_FAILURE);
+  }
+}
+
 int main(int argc, char const *argv[]) {
   if (argc < 2) {
     cout << "sdbsh: error: please provide the ip of the server";
@@ -29,19 +37,17 @@ int main(int argc, char const *argv[]) {
   while (std::getline(std::cin, request)) {
     query_result_t query_result;
 
-    write(sock, request.c_str(), request.length());
+    int bytes_write = write(sock, request.c_str(), request.length());
+    check_disconnected_rw(bytes_write, sock);
+
 
     char response_buffer[1024];
     ssize_t bytes_read;
     while ((bytes_read = read(sock, response_buffer, 1024)) > 0 && strcmp(response_buffer, RESULT_EN_MARKER.c_str()) != 0) {
       std::cout << response_buffer << std::endl;
     }
-
-    if (bytes_read <= 0) {
-      cout << "sdbsh: lost connection with the server" << endl;
-      close(sock);
-      return 0;
-    }
+    check_disconnected_rw(bytes_read, sock);
   }
+
   return 0;
 }

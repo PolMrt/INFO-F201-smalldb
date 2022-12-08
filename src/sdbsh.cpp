@@ -43,7 +43,7 @@ int main(int argc, char const *argv[]) {
 
     char response_buffer[1024];
     ssize_t bytes_read;
-    while ((bytes_read = read(sock, response_buffer, 1024)) > 0 && strcmp(response_buffer, RESULT_EN_MARKER.c_str()) != 0) {
+    while ((bytes_read = read(sock, response_buffer, 1024)) > 0 && strcmp(response_buffer, RESULT_END_MARKER.c_str()) != 0) {
       std::cout << response_buffer << std::endl;
     }
     check_disconnected_rw(bytes_read, sock);

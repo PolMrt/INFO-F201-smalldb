@@ -44,7 +44,9 @@ int main(int argc, char const *argv[]) {
       ssize_t bytes_read;
 
       while ((bytes_read = read(sock, response_buffer, 1024)) > 0 && strcmp(response_buffer, RESULT_END_MARKER.c_str()) != 0) {
-        std::cout << response_buffer << std::endl;
+        if (strlen(response_buffer) != sizeof(response_buffer) - 1) {
+          std::cout << response_buffer << std::endl;
+        }
       }
       
       if (bytes_read <= 0) {

@@ -93,6 +93,43 @@ for (auto s = new_end; s != db->data.end(); ++s) {
 }
 \end{lstlisting}
 
+\section{Bash}
+
+\subsection{Fonctionnement}
+
+Nous avons décider de faire un code le plus simple possible. Pour ce faire, comme toutes les fonctions demandées utilisent le PID du processus "smalldb", nous avons créé une variable globale PID qui grep smalldb (récupère le PID du processus de smalldb). Ensuite il nous restait plus qu'à envoyé un signal SIGINT pour la fonction stop (arrête le serveur):
+
+\begin{lstlisting}
+stop(){
+kill -SIGINT $pid
+}
+\end{lstlisting}
+
+Un signal SIGUSR1 pour la fonction sync (sauvegarde la base de donnée sur le disque):
+
+\begin{lstlisting}
+sync(){
+kill -SIGUSR1 $pid
+}
+\end{lstlisting}
+
+Et enfin récupérer l'IP des clients grâce à la fonction list : 
+
+\begin{lstlisting}
+list(){
+lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d- -f2 | sed 's/>//g' | cut -d: -f1 | sed '1d'
+}
+\end{lstlisting}
+
+Les paramètres utilisés dans la fonction lsof sont expliqué dans le fichier \texttt{smalldbctl.sh} et le problèmes rencontrés sont quant à eux expliqués dans la sous-section ci-dessous.
+
+\subsection{Difficultés rencontrées}
+
+Lors de la création de la fonction list, un problème est survenu avec l'affichage de l'IP. La commande ss était introuvable sur Mac et netstat ne fonctionnait pas avec les options nécessaires pour récupérer l'IP voulu. 
+Nous avons donc dû trouver une autre commande nous permettant de récupérer l'IP du client.
+Après de longues heures de recherche nous avons trouvé la commande lsof. Mais un nouveau problème apparu, il fallait trier les informations que la commande lsof affichait. Nous avons trouver grâce à des forums (dont Stack Overflow) comment récupérer ce que lsof affichait, comment en extraire la partie voulue, la séparer à partir d'un certain symbole ("-" dans notre cas) et aussi comment séléctionner la bonne partie après un cut. Après ça il nous restait plus qu'à retirer l'astérisque qui s'affichait avant les IP à l'aide la commande sed/'1d' qui retire la première ligne de notre echo (en bash).
+
+
 \section{Tests additionnels}
 
 Afin de tester notre implémentation, nous avons dans un premier temps créé une "Github Action" pour compiler afin tester notre code à chaque nouveaux commit. Celui-ci se contentait de lancer \texttt{make} afin de compiler le code et lançait ensuite le script bash fournit qui contient les différents tests. Dans un second temps, nous avons déployé la partie "smalldb" (le serveur) sur une machine virtuelle distante pour tester notre code dans des conditions plus concrètes.

@@ -154,4 +154,12 @@ Cette nouvelle approche se rapproche plus de ce que l'on pourrait retrouver en r
 
 Dans cette nouvelle partie, nous exécutons les requêtes des clients de manière parallèle sur des threads différents. Dans la première partie, nous avions séparé l'exécution de chaque type de requête dans des processus différents.
 
+
+\subsection{Bash}
+
+La partie Bash du projet 2  a été plus simple a réaliser que celle de la partie 1.
+Pour la partie 1, le nombre d'arguments rentrés pouvait modifier le fonctionnement des fonctions alors que dans la partie 2, le seul argument à entrer est le nom de la fonction appelée.
+
+Dans la partie 2, il suffit de récupérer le PID de \texttt{smalldb} et de lui envoyer un signal. Tandis que pour la partie 1 nous devions trouver le bon PID parmis les différents processus en cours, pour pouvoir lui envoyer le signal voulu. Cette recherche du bon PID demandait un traitement plus conséquent avant l'envoie du signal, par rapport au simple envoie du signal de la partie 2. 
+
 \end{document}

@@ -93,9 +93,38 @@ for (auto s = new_end; s != db->data.end(); ++s) {
 }
 \end{lstlisting}
 
-\subsubsection{Test en réseau local}
+\subsubsection{Communication sur différentes machines}
 
-Nous avons rencontré un problème lors de nos tests sur un réseau locale. Dans un premier temps, nous avons testé sur un partage de connexion fait via un iPhone mais tous les résultats retournés par le serveur (un des deux ordinateurs en local ici) étaient étranges.
+Nous avons rencontré un problème lors de nos tests sur différentes machines : quand un des deux ordinateur est un serveur (\texttt{smalldb}) et que l'autre est le client (\texttt{sdbsh}).
+
+Dans un premier temps, nous avons testé sur un partage de connexion fait via un iPhone mais tous les résultats retournés par le serveur étaient étranges.
+
+\begin{figure}[ht]
+	\includegraphics[scale=0.6]{assets/char-iphone.png}
+	\caption{Exemple des résultats retournés par le client lors d'une connexion à un serveur sur un réseau local via le partage de connexion.}
+	\label{fig:char_iphone}
+\end{figure}
+
+Nous nous sommes dits que cela pouvait être une limitation du routeur interne à l'iPhone lors du partage de connexion. Pour tester d'une autre manière nous avons donc lancé \texttt{smalldb} sur un serveur distant loué chez Hetzner pour l'occasion. Nous arrivons à nous connecter correctement sur ce serveur distant, nous arrivons aussi à sélectionner des étudiants et ceux-ci s'affichent bien. Cependant, à la fin du select des caractères étranges s'affichent, principalement quand le select retourne plus d'un étudiant.
+
+\begin{lstlisting}
+> ./sdbsh 142.132.176.27
+> select fname=Pol
+000000001: Pol Marnette in section INFO, born on the 12/07/2001
+1 student(s) selected
+> select section=INFO
+000000001: Pol Marnette in section INFO, born on the 12/07/2001
+000000002: Romain Markowitch in section INFO, born on the 05/05/2003
+000000003: Jeremy Hennebicq in section INFO, born on the 06/12/2003
+3 student(s) selected
+V
+V
+\end{lstlisting}
+
+Les deux \texttt{V} qui s'affichent ne sont pas attendus. Aussi, le client n'arrive pas à détecter que le serveur a fini de lui retourner les résultats et il n'est alors pas possible de renvoyer une nouvelle requête.
+
+Nous n'avons pas trouvé de solution à ce problème.
+
 
 \section{Bash}
 
@@ -130,21 +159,15 @@ Les paramètres utilisés dans la fonction lsof sont expliqué dans le fichier \
 
 \subsection{Difficultés rencontrées}
 
-Lors de la création de la fonction list, un problème est survenu avec l'affichage de l'IP. La commande ss était introuvable sur Mac et netstat ne fonctionnait pas avec les options nécessaires pour récupérer l'IP voulu. 
-Nous avons donc dû trouver une autre commande nous permettant de récupérer l'IP du client.
-Après de longues heures de recherche nous avons trouvé la commande lsof. Mais un nouveau problème apparu, il fallait trier les informations que la commande lsof affichait. Nous avons trouver grâce à des forums (dont Stack Overflow) comment récupérer ce que lsof affichait, comment en extraire la partie voulue, la séparer à partir d'un certain symbole ("-" dans notre cas) et aussi comment séléctionner la bonne partie après un cut. Après ça il nous restait plus qu'à retirer l'astérisque qui s'affichait avant les IP à l'aide la commande sed/'1d' qui retire la première ligne de notre echo (en bash).
+Lors de la création de la fonction \texttt{list}, un problème est survenu avec l'affichage de l'adresse IP. La commande \textt{ss} était introuvable sur Mac et \texttt{netstat} ne fonctionnait pas avec les options nécessaires pour récupérer l'IP voulu.
 
+Nous avons donc dû trouver une autre commande nous permettant de récupérer l'IP du client.
+
+Après de longues heures de recherche nous avons trouvé la commande \textt{lsof}. Mais un nouveau problème apparu, il fallait trier les informations que la commande \textt{lsof} affichait. Nous avons trouver grâce à des forums (dont Stack Overflow) comment récupérer ce que \texttt{lsof} affichait, comment en extraire la partie voulue, la séparer à partir d'un certain symbole ("-" dans notre cas) et aussi comment sélectionner la bonne partie après un cut. Après ça il nous restait plus qu'à retirer l'astérisque qui s'affichait avant les IP à l'aide la commande \texttt{sed/'1d'} qui retire la première ligne de notre echo (en bash).
 
 \section{Tests additionnels}
 
-Afin de tester notre implémentation, nous avons dans un premier temps créé une "Github Action" pour compiler afin tester notre code à chaque nouveaux commit. Celui-ci se contentait de lancer \texttt{make} afin de compiler le code et lançait ensuite le script bash fournit qui contient les différents tests. Dans un second temps, nous avons déployé la partie "smalldb" (le serveur) sur une machine virtuelle distante pour tester notre code dans des conditions plus concrètes.
-
-Nous laisserons le serveur en ligne, vous pouvez donc essayer de vous y connecter sur l'adresse IP \texttt{142.132.176.27}, comme suit :
-
-\begin{lstlisting}
-./sdbsh 142.132.176.27
-\end{lstlisting}
-
+Afin de tester notre implémentation, nous avons dans un premier temps créé une "Github Action" pour compiler afin tester notre code à chaque nouveaux commit. Celui-ci se contentait de lancer \texttt{make} afin de compiler le code et lançait ensuite le script bash fournit qui contient les différents tests. Dans un second temps, comme mentionné dans la partie sur les difficultés rencontrés, nous avons déployé la partie \texttt{smalldb} (le serveur) sur une machine virtuelle distante pour tester notre code dans des conditions plus concrètes.
 
 \section{Comparaison avec la première partie}
 

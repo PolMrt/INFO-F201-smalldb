@@ -10,16 +10,16 @@
 #include <fstream>
 #include <cstdio>
 
-#include "sig.hpp"
 #include "db.hpp"
 #include "queries.hpp"
+#include "threads.hpp"
 #include "socket.hpp"
 
 using namespace std;
 
-database_t *share_db;
-vector<int> connections_sockets;
 int server_fd;
+vector<int> connections_sockets;
+database_t *share_db;
 bool server_stopping = false;
 
 void signal_handler(int signal) {
@@ -33,6 +33,8 @@ void signal_handler(int signal) {
       close(socket_id);
     }
 
+    // JOIN les threads
+
     db_save(share_db);
     close(server_fd);
     exit(EXIT_SUCCESS);
@@ -43,60 +45,6 @@ void signal_handler(int signal) {
     return;
   }
 }
-
-void *thread_fct(void *ptr) {
-  int socket = (*(int*)ptr);
-
-  char buffer[1024];
-  int read_response;
-
-  while ((read_response = read(socket, buffer, 1024)) > 0) {
-    query_result_t query_result;
-    query_result.query = buffer;
-
-    parse_and_execute(query_result, share_db, query_result.query);
-    send_query_result(socket, query_result);
-
-    // Reset buffer value to nothing, so request do not overlap
-    memset(buffer, 0, 1024);
-  }
-
-  if (read_response == 0 && !server_stopping) {
-    cout << "smalldb: Client " + to_string(socket) + " disconnected (normal). Closing connection and thread" << endl;
-  } else if (!server_stopping) {
-    cout << "smalldb: Lost connection to client " + to_string(socket) << endl;
-    cout << "smalldb: Closing connection " + to_string(socket) << endl;
-    cout << "smalldb: Closing thread for connection " + to_string(socket) << endl;
-  } else {
-    cout << "smalldb: Closing connection " + to_string(socket) << endl;
-    cout << "smalldb: Closing thread for connection " + to_string(socket) << endl;
-  }
-
-
-  close(socket);
-  return nullptr;
-}
-
-
-void new_client(sigset_t *mask_int,sigset_t *mask_usr1, int new_socket){
-  // Block signals while accepting connection
-  block_sig(mask_int, SIGINT);
-  block_sig(mask_usr1, SIGUSR1);
-  
-  // Save the file descriptor in a vector
-  connections_sockets.push_back(new_socket);
-
-  // Creating the thread
-  pthread_t tid;
-  pthread_create(&tid, NULL, thread_fct, &new_socket);
-
-  cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
-
-  // Unblock signal in the main thread (here)
-  unblock_sig(mask_int);
-  unblock_sig(mask_usr1);
-}
-
 
 int main(int argc, char const *argv[]) {
   // init the db
@@ -131,8 +79,10 @@ int main(int argc, char const *argv[]) {
   while (1) {
     int new_socket = int(accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen));
     if (new_socket > 0) {
-      // Accepting the socket was successfull
-      new_client(&mask_int, &mask_usr1, new_socket);
+      // The connection to the client was successfull, now we create its thread
+      // Save the file descriptor in a vector
+      connections_sockets.push_back(new_socket);
+      new_client(&mask_int, &mask_usr1, new_socket, share_db, &server_stopping);
     } else {
       // An error occured while accepting socket
       if (errno != EINTR) {

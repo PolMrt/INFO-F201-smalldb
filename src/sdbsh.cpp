@@ -25,13 +25,14 @@ int main(int argc, char const *argv[]) {
   }
   const char * ip = argv[1];
 
-  int sock = socket(AF_INET, SOCK_STREAM, 0);
+  int sock = check_and_exit(socket(AF_INET, SOCK_STREAM, 0), "sdbsh: error: cannot connect to the server");
+  
 
   struct sockaddr_in serv_addr;
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(28772);
   inet_pton(AF_INET, ip, &serv_addr.sin_addr);
-  connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+  check_and_exit(connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)), "sdbsh: error: cannot connect to the server");
 
   std::string request;
   while (std::getline(std::cin, request)) {

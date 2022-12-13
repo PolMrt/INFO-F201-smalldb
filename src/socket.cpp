@@ -13,16 +13,16 @@ void create_server(int &server_fd, struct sockaddr_in &address) {
 
   int opt = 1;
   // The operator | does not work on mac here, cf https://stackoverflow.com/q/58599070/7905936#comment103510725_58599070
-  check_and_exit(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)), "setting the option of fthe socket (with IP reused)");
-  check_and_exit(setsockopt(server_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)), "setting the option of fthe socket (with Port reused)");
+  check_and_exit(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)), "smalldb: error: setting the option of fthe socket (with IP reused)");
+  check_and_exit(setsockopt(server_fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)), "smalldb: error: setting the option of fthe socket (with Port reused)");
   
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons(28772);
   
-  check_and_exit(bind(server_fd, (struct sockaddr *)&address, sizeof(address)), "binding the server");
+  check_and_exit(bind(server_fd, (struct sockaddr *)&address, sizeof(address)), "smalldb: error: binding the server");
 
-  check_and_exit(listen(server_fd, 3), "server listen");
+  check_and_exit(listen(server_fd, 3), "smalldb: error: server listen");
 }
 
 void send_query_result(int socket, const query_result_t &query_result) {
@@ -54,8 +54,7 @@ void send_query_result(int socket, const query_result_t &query_result) {
 
 int check_and_exit(int returned_value, std::string error_info) {
   if (returned_value < 0) {
-    std::string error_message = "smalldb: error occured [" + error_info + "]";
-    perror(error_message.c_str());
+    perror(error_info.c_str());
     exit(EXIT_FAILURE);
   } else {
     return returned_value;

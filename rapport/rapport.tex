@@ -117,11 +117,12 @@ Et enfin récupérer l'IP des clients grâce à la fonction list :
 
 \begin{lstlisting}
 list(){
-lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d- -f2 | sed 's/>//g' | cut -d: -f1 | sed '1d'
+lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d- -f2 | \
+sed 's/>//g' | cut -d: -f1 | sed '1d'
 }
 \end{lstlisting}
 
-Les paramètres utilisés dans la fonction lsof sont expliqué dans le fichier \texttt{smalldbctl.sh} et le problèmes rencontrés sont quant à eux expliqués dans la sous-section ci-dessous.
+Les paramètres utilisés dans la fonction lsof sont expliqué dans le fichier \texttt{smalldbctl} et le problèmes rencontrés sont quant à eux expliqués dans la sous-section ci-dessous.
 
 \subsection{Difficultés rencontrées}
 

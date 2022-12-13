@@ -15,13 +15,14 @@ using namespace std;
 database_t *share_db_;
 bool *server_stopping_;
 
-void new_client(sigset_t *mask_int, sigset_t *mask_usr1, int new_socket, database_t *db, bool *server_stopping_ptr) {
+void new_client(int new_socket, database_t *db, bool *server_stopping_ptr) {
+  sigset_t mask_int, mask_usr1;
   server_stopping_ = server_stopping_ptr;
   share_db_ = db;
 
   // Block signals while accepting connection
-  block_sig(mask_int, SIGINT);
-  block_sig(mask_usr1, SIGUSR1);
+  block_sig(&mask_int, SIGINT);
+  block_sig(&mask_usr1, SIGUSR1);
 
   // Creating the thread
   pthread_t tid;
@@ -30,8 +31,8 @@ void new_client(sigset_t *mask_int, sigset_t *mask_usr1, int new_socket, databas
   cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
 
   // Unblock signal in the main thread (here)
-  unblock_sig(mask_int);
-  unblock_sig(mask_usr1);
+  unblock_sig(&mask_int);
+  unblock_sig(&mask_usr1);
 }
 
 void *thread_fct(void *ptr) {

@@ -74,7 +74,6 @@ int main(int argc, char const *argv[]) {
   create_server(server_fd, address);
   
   size_t addrlen = sizeof(address);
-  sigset_t mask_int, mask_usr1;
 
   while (1) {
     int new_socket = int(accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen));
@@ -82,7 +81,7 @@ int main(int argc, char const *argv[]) {
       // The connection to the client was successfull, now we create its thread
       // Save the file descriptor in a vector
       connections_sockets.push_back(new_socket);
-      new_client(&mask_int, &mask_usr1, new_socket, share_db, &server_stopping);
+      new_client(new_socket, share_db, &server_stopping);
     } else {
       // An error occured while accepting socket
       if (errno != EINTR) {

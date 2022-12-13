@@ -52,9 +52,9 @@ void send_query_result(int socket, const query_result_t &query_result) {
   check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
 }
 
-int check_and_exit(int returned_value, std::string error_info) {
+int check_and_exit(int returned_value, std::string error_message) {
   if (returned_value < 0) {
-    perror(error_info.c_str());
+    perror(error_message.c_str());
     exit(EXIT_FAILURE);
   } else {
     return returned_value;

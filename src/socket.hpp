@@ -8,7 +8,7 @@
 #include "queries.hpp"
 
 // This is used to mark that all results have been sent to the client
-const std::string RESULT_END_MARKER = "POLMARNETTEROMAINMARKOWITCH";
+const std::string RESULT_END_MARKER = "**";
 
 /**
  * @brief Create and start the server

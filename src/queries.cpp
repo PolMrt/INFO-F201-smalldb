@@ -88,16 +88,30 @@ void execute_insert(query_result_t& query_result, database_t* const db, const ch
                     const tm birthdate) {
   write_guard_before();
 
-  db->data.emplace_back();
-  student_t *s = &db->data.back();
-  s->id = id;
-  snprintf(s->fname, sizeof(s->fname), "%s", fname);
-  snprintf(s->lname, sizeof(s->lname), "%s", lname);
-  snprintf(s->section, sizeof(s->section), "%s", section);
-  s->birthdate = birthdate;
+  // Check if id does not alread exists
+  bool exists = false;
+  for (auto student: db->data) {
+    if (student.id == id) {
+      exists = true;
+      break;
+    }
+  }
 
-  query_result.type = QUERY_INSERT;
-  query_result.students.push_back(*s);
+  if (exists) {
+    query_fail_id_exists(query_result, "id", std::to_string(id).c_str());
+  } else {
+    db->data.emplace_back();
+    student_t *s = &db->data.back();
+    s->id = id;
+    snprintf(s->fname, sizeof(s->fname), "%s", fname);
+    snprintf(s->lname, sizeof(s->lname), "%s", lname);
+    snprintf(s->section, sizeof(s->section), "%s", section);
+    s->birthdate = birthdate;
+
+    query_result.type = QUERY_INSERT;
+    query_result.students.push_back(*s);
+  }
+
 
   write_guard_after();
 }
@@ -218,4 +232,9 @@ void query_fail_bad_filter(query_result_t& query_result, const char* const field
 void query_fail_bad_update(query_result_t& query_result, const char* const field, const char* const filter) {
   query_result.status = QUERY_BAD_UPDATE;
   snprintf(query_result.error_message, sizeof(query_result.error_message), "Error: you can not apply %s=%s", field, filter);
+}
+
+void query_fail_id_exists(query_result_t& query_result, const char* const field, const char* const filter) {
+  query_result.status = QUERY_ID_EXISTS_INSERT;
+  snprintf(query_result.error_message, sizeof(query_result.error_message), "Error: this id already exists in the db %s=%s", field, filter);
 }

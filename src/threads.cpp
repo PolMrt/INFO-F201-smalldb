@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <iostream>
+#include <string>
 
 #include "sig.hpp"
 #include "queries.hpp"
@@ -26,7 +27,11 @@ pthread_t new_client(int new_socket, database_t *db, bool *server_stopping_ptr) 
 
   // Creating the thread
   pthread_t tid;
-  pthread_create(&tid, NULL, thread_fct, &new_socket);
+  int ptread_success = pthread_create(&tid, NULL, thread_fct, &new_socket);
+  if (ptread_success != 0) {
+    string msg = "sdbsh: error: an error occured while creating a thread for client " + to_string(new_socket);
+    perror(msg.c_str());
+  }
 
   cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
 
@@ -54,18 +59,17 @@ void *thread_fct(void *ptr) {
     memset(buffer, 0, 1024);
   }
 
-  if (read_response == 0 && !(&server_stopping_)) {
-    cout << "smalldb: Client " + to_string(socket) + " disconnected (normal). Closing connection and thread" << endl;
-  } else if (!(&server_stopping_)) {
-    cout << "smalldb: Lost connection to client " + to_string(socket) << endl;
-    cout << "smalldb: Closing connection " + to_string(socket) << endl;
-    cout << "smalldb: Closing thread for connection " + to_string(socket) << endl;
-  } else {
-    cout << "smalldb: Closing connection " + to_string(socket) << endl;
-    cout << "smalldb: Closing thread for connection " + to_string(socket) << endl;
+  if (!(&server_stopping_)) {
+    if (read_response == 0) {
+      cout << "smalldb: Client " + to_string(socket) + " disconnected (normal). Closing connection and thread" << endl;
+    } else {
+      cout << "smalldb: Lost connection to client " + to_string(socket) << endl;
+      cout << "smalldb: Closing connection " + to_string(socket) << endl;
+      cout << "smalldb: Closing thread for connection " + to_string(socket) << endl;
+    }
   }
 
-
   close(socket);
+  pthread_exit(nullptr);
   return nullptr;
 }

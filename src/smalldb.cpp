@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
+#include <utility>
 #include <vector>
 #include <iostream>
 #include <string>
@@ -18,8 +19,7 @@
 using namespace std;
 
 int server_fd;
-vector<int> connections_sockets;
-vector<pthread_t> threads;
+vector< pair<int, pthread_t> > connections_sockets_threads;
 database_t *share_db;
 bool server_stopping = false;
 
@@ -30,14 +30,12 @@ void signal_handler(int signal) {
     cout << endl; // Break line after ^C
     cout << "smalldb: stopping the server..." << endl;
 
-    for (int socket_id: connections_sockets) {
-      close(socket_id);
+    for (auto socket_threads: connections_sockets_threads) {
+      cout << "smalldb: Closing connection " + to_string(socket_threads.first) << endl;
+      close(socket_threads.first);
+      cout << "smalldb: Closing thread for connection " + to_string(socket_threads.first) << endl;
+      // pthread_join(socket_threads.second, nullptr);
     }
-
-    for (pthread_t tid: threads) {
-      pthread_join(tid, nullptr);
-    }
-
     db_save(share_db);
     close(server_fd);
     exit(EXIT_SUCCESS);
@@ -82,10 +80,9 @@ int main(int argc, char const *argv[]) {
     int new_socket = int(accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen));
     if (new_socket > 0) {
       // The connection to the client was successfull, now we create its thread
-      // Save the file descriptor in a vector
-      connections_sockets.push_back(new_socket);
+      // Save the file descriptor & thread id in a vector
       pthread_t tid = new_client(new_socket, share_db, &server_stopping);
-      threads.push_back(tid);
+      connections_sockets_threads.push_back(make_pair(new_socket, tid));
     } else {
       // An error occured while accepting socket
       if (errno != EINTR) {

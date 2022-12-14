@@ -20,7 +20,7 @@
 
 \title{INFO-F201 SmallDB : rapport}
 \author{HENNEBICQ Jérémy\and MARKOWITCH Romain \and MARNETTE Pol}
-\date{16 décembre 2022}
+\date{10 décembre 2022}
 
 \renewcommand{\contentsname}{Table des matières}
 \begin{document}
@@ -33,7 +33,7 @@
 
 \section{Introduction}
 
-Ce projet est la prolongation de la première partie "tinydb" en prenant une nouvelle approche. Le but est le même : la réalisation d'une base de données en C++. Ici le serveur est différencié du client et communiquent ensemble via des sockets. Aussi, les requêtes des différents clients seront maitenant gérés par des threads individuels. Cette nouvelle approche soulève des questions concernant l'implémentation. Il faudra faire attention au niveau de l'accès concurrent à la base de données, trouver un moyen de passer les réponses au client, etc.
+Ce projet est la prolongation de la première partie \texttt{tinydb} en prenant une nouvelle approche. Le but est le même : la réalisation d'une base de données en C++. Ici le serveur est différencié du client et communiquent ensemble via des sockets. Aussi, les requêtes des différents clients seront maintenant gérées par des threads individuels. Cette nouvelle approche soulève des questions concernant l'implémentation. Il faudra faire attention au niveau de l'accès concurrent à la base de données, trouver un moyen de passer les réponses au client, etc.
 
 Dans ce rapport nous allons décrire notre implémentation, revenir sur certains points qui nous ont posés problèmes et comparer cette nouvelle implémentation à la précédente.
 
@@ -41,7 +41,7 @@ Dans ce rapport nous allons décrire notre implémentation, revenir sur certains
 
 \subsection{Implémentation des mutex}
 
-Pour éviter les accès concurrents à la base de données, nous avons du implémenter des mutex. Nous avons utilisé le pseudo-code fournit dans l'énoncé pour créer 4 fonctions qui sont appelés avant et après les lectures et les écritures. L'implémentations de celles-ci se trouve dans le fichier \texttt{guard.cpp}. Voici l'explication de son fonctionnement :
+Pour éviter les accès concurrents à la base de données, nous avons du implémenter des mutex. Nous avons utilisé le pseudo-code fournit dans l'énoncé pour créer 4 fonctions qui sont appelées avant et après les lectures et les écritures. L'implémentations de celles-ci se trouve dans le fichier \texttt{guard.cpp}. Voici l'explication de leurs fonctionnements :
 \begin{enumerate}
 	\item Nous créons une mutex \texttt{new\_access} qui sera utilisé pour bloquer le processus de registration du lecteur ou de l'écrivain. Elle sera bloqué au début de chaque fonction \texttt{\_before} et unlock à la fin,
 	\item Nous créons une mutex \texttt{write\_access} qui permet de restreindre l'accès à un unique écrivain à la fois. La fonction \texttt{write\_guard\_before} la verrouillera et la fonction \texttt{write\_guard\_after} la déverrouillera,
@@ -50,20 +50,20 @@ Pour éviter les accès concurrents à la base de données, nous avons du implé
 	\item Finalement dans la fonction \texttt{read\_guard\_after} on décrémentera le nombre de lecteur et si celui-ci est maintenant à 0, nous déverrouillerons l'accès à l'écriture.
 \end{enumerate}
 
-Cette approche peut sembler à première approche complexe. Mais celle-ci évite les soucis de famine.
+Cette approche empêche les écrivains de bloquer les lecteurs en permettant aux lecteurs de continuer à accéder à la base de données tant qu'il y a des lecteurs en cours d'exécution. Lorsqu'un lecteur termine, il décrémente le compteur de lecteurs et, s'il est égal à zéro, débloque l'accès en écriture pour les écrivains. De cette manière, cette implémentation de mutex permet d'éviter les problèmes de famine en gérant de manière efficace l'accès en lecture/écriture à la base de données.
 
 \subsection{Difficultés rencontrés}
 
 \subsubsection{Communication des résultats au client}
 
-Pour communiquer les résultats d'une requête envoyé par le client au serveur nous avons d'abord essayé de transmettre au client un structure \texttt{query\_result\_t}. Cette structure contins un \texttt{std::vector} des étudiants sélectionnés, la requête, le type de requête (SELECT, etc), l'état de la requête et éventuellement un message d'erreur. Nous avons donc essayé d'envoyer cette structure au client pour qu'il puisse lire les résultats de sa requête. Voici le bout de code que nous avons essayé :
+Pour communiquer les résultats d'une requête envoyée par le client au serveur nous avons d'abord essayé de transmettre au client un structure \texttt{query\_result\_t}. Cette structure contient un \texttt{std::vector} des étudiants sélectionnés, la requête, le type de requête (\texttt{SELECT}, etc), l'état de la requête et éventuellement un message d'erreur. Nous avons donc essayé d'envoyer cette structure au client pour qu'il puisse lire les résultats de sa requête. Voici le bout de code que nous avons essayé :
 \begin{lstlisting}
-write(socket, query_result, sizeof(query_result_t));
+write(socket, &query_result, sizeof(query_result_t));
 \end{lstlisting}
 	
 	Nous n'avons pas réussi à faire fonctionner la communication avec cette approche. Nous en avons déduit que communiquer un \texttt{std::vector} via les sockets n'était pas trivial. Nous avons aussi essayé avec une liste dans le style de C (avec des pointeurs) mais le soucis restait.
 	
-	Nous avons donc opter pour une autre solution : envoyer ligne par ligne les résultats à imprimer chez le client. Nous avons défini un marqueur d'arrête (\texttt{**} en l'occurence) qui indiquera au client la fin des réponses a afficher dans le terminal. Cette solution fonctionne mais nous laisse perplexe au niveau de la charge réseaux, une autre implémentation nécessitant moins de \texttt{read} et \texttt{write} pourrait être optimal. Voici un bout de code de notre implémentation :
+	Nous avons donc opté pour une autre solution : envoyer ligne par ligne les résultats à imprimer chez le client. Nous avons défini un marqueur d'arrête (\texttt{**} en l'occurence) qui indiquera au client la fin des réponses à afficher dans le terminal. Cette solution fonctionne mais nous laisse perplexe au niveau de la charge réseaux et du nombre d'appels système. Une autre implémentation nécessitant moins de \texttt{read} et \texttt{write} pourrait être plus optimal. Voici une illustration de notre implémentation :
 
 \begin{lstlisting}
 // Server
@@ -97,7 +97,7 @@ for (auto s = new_end; s != db->data.end(); ++s) {
 
 Nous avons rencontré un problème lors de nos tests sur différentes machines : quand un des deux ordinateur est un serveur (\texttt{smalldb}) et que l'autre est le client (\texttt{sdbsh}).
 
-Dans un premier temps, nous avons testé sur un partage de connexion fait via un iPhone mais tous les résultats retournés par le serveur étaient étranges.
+Dans un premier temps, nous avons testé sur un partage de connexion via un iPhone mais tous les résultats retournés par le serveur étaient étranges. Aucunes des lignes retournés par le serveur n'était correctes.
 
 \begin{figure}[ht]
 	\includegraphics[scale=0.6]{assets/char-iphone.png}
@@ -121,7 +121,7 @@ V
 V
 \end{lstlisting}
 
-Les deux \texttt{V} qui s'affichent ne sont pas attendus. Aussi, le client n'arrive pas à détecter que le serveur a fini de lui retourner les résultats et il n'est alors pas possible de renvoyer une nouvelle requête.
+Les deux \texttt{V} qui s'affichent ne sont pas attendus. Aussi, le client n'arrive pas à détecter que le serveur a fini de lui retourner les résultats et il n'est alors pas possible de renvoyer une nouvelle requête via le client.
 
 Nous n'avons pas trouvé de solution à ce problème.
 
@@ -130,7 +130,7 @@ Nous n'avons pas trouvé de solution à ce problème.
 
 \subsection{Fonctionnement}
 
-Nous avons décider de faire un code le plus simple possible. Pour ce faire, comme toutes les fonctions demandées utilisent le PID du processus "smalldb", nous avons créé une variable globale PID qui grep smalldb (récupère le PID du processus de smalldb). Ensuite il nous restait plus qu'à envoyé un signal SIGINT pour la fonction stop (arrête le serveur):
+Nous avons décidé de faire un code le plus simple possible. Pour ce faire, comme toutes les fonctions demandées utilisent le PID du processus \texttt{smalldb}, nous avons créé une variable globale PID qui grep \texttt{smalldb} (récupère le PID du processus de \texttt{smalldb}). Ensuite il nous restait plus qu'à envoyer un signal \texttt{SIGINT} pour la fonction stop (arrêter le serveur) :
 
 \begin{lstlisting}
 stop(){
@@ -138,7 +138,7 @@ kill -SIGINT $pid
 }
 \end{lstlisting}
 
-Un signal SIGUSR1 pour la fonction sync (sauvegarde la base de donnée sur le disque):
+Un signal \texttt{SIGUSR1} pour la fonction sync (sauvegarde la base de donnée sur le disque) :
 
 \begin{lstlisting}
 sync(){
@@ -146,7 +146,7 @@ kill -SIGUSR1 $pid
 }
 \end{lstlisting}
 
-Et enfin récupérer l'IP des clients grâce à la fonction list : 
+Et enfin récupérer l'adresse IP des clients grâce à la fonction list : 
 
 \begin{lstlisting}
 list(){
@@ -155,7 +155,7 @@ sed 's/>//g' | cut -d: -f1 | sed '1d'
 }
 \end{lstlisting}
 
-Les paramètres utilisés dans la fonction lsof sont expliqué dans le fichier \texttt{smalldbctl} et le problèmes rencontrés sont quant à eux expliqués dans la sous-section ci-dessous.
+Les paramètres utilisés dans la fonction \texttt{lsof} sont expliqués dans le fichier \texttt{smalldbctl} et les problèmes rencontrés sont quant à eux expliqués dans la sous-section ci-dessous.
 
 \subsection{Difficultés rencontrées}
 
@@ -163,11 +163,13 @@ Lors de la création de la fonction \texttt{list}, un problème est survenu avec
 
 Nous avons donc dû trouver une autre commande nous permettant de récupérer l'IP du client.
 
-Après de longues heures de recherche nous avons trouvé la commande \textt{lsof}. Mais un nouveau problème apparu, il fallait trier les informations que la commande \textt{lsof} affichait. Nous avons trouver grâce à des forums (dont Stack Overflow) comment récupérer ce que \texttt{lsof} affichait, comment en extraire la partie voulue, la séparer à partir d'un certain symbole ("-" dans notre cas) et aussi comment sélectionner la bonne partie après un cut. Après ça il nous restait plus qu'à retirer l'astérisque qui s'affichait avant les IP à l'aide la commande \texttt{sed/'1d'} qui retire la première ligne de notre echo (en bash).
+Après de longues heures de recherche nous avons trouvé la commande \texttt{lsof}. Mais un nouveau problème apparu, il fallait trier les informations que la commande \texttt{lsof} affichait. Nous avons trouver grâce à des forums (dont Stack Overflow) comment récupérer ce que \texttt{lsof} affichait, comment en extraire la partie voulue, la séparer à partir d'un certain symbole ("-" dans notre cas) et aussi comment sélectionner la bonne partie après un cut. Après ça il nous restait plus qu'à retirer l'astérisque qui s'affichait avant les IP à l'aide la commande \texttt{sed/'1d'} qui retire la première ligne de notre echo.
 
 \section{Tests additionnels}
 
 Afin de tester notre implémentation, nous avons dans un premier temps créé une "Github Action" pour compiler afin tester notre code à chaque nouveaux commit. Celui-ci se contentait de lancer \texttt{make} afin de compiler le code et lançait ensuite le script bash fournit qui contient les différents tests. Dans un second temps, comme mentionné dans la partie sur les difficultés rencontrés, nous avons déployé la partie \texttt{smalldb} (le serveur) sur une machine virtuelle distante pour tester notre code dans des conditions plus concrètes.
+
+Concernant le fichier \texttt{/tests/run\_tests.sh}, nous avons ajouté un \texttt{sleep 0.5} entre le lancement du serveur et du client car sinon, le client se lançait avant que le serveur n'ait eu le temps de commencer à accepter de nouvelles connections. Ceci provoquait alors une erreur lors des tests en fonction de la machine sur laquelle ceux-ci étaient lancés.
 
 \section{Comparaison avec la première partie}
 
@@ -175,18 +177,23 @@ Afin de tester notre implémentation, nous avons dans un premier temps créé un
 
 Un des changements majeur qu'apporte la seconde partie du projet est la communication via sockets entre le client et le serveur. Dans la première partie, nous utilisions les pipes, non pas pour communiquer entre le client et le serveur mais pour communiquer entre les processus gérants les requêtes et le processus principale qui communique avec l'utilisateur.
 
-Cette nouvelle approche se rapproche plus de ce que l'on pourrait retrouver en réalité. 
+Cette nouvelle approche se rapproche plus de ce que l'on pourrait retrouver en réalité avec un serveur distant du client.
+
 
 \subsection{Processus et threads}
 
 Dans cette nouvelle partie, nous exécutons les requêtes des clients de manière parallèle sur des threads différents. Dans la première partie, nous avions séparé l'exécution de chaque type de requête dans des processus différents.
 
+Les threads sont d'une plus grande flexibilité pour cette implémentation. Par exemple, partager la base de données est maintenant plus simple mais si elle requiert l'utilisation de mutex.
+
+Le fait de paralléliser les requêtes des clients au lieu de paralléliser les types de requêtes comme dans la partie 1 rend l'implémentation plus scalable et ainsi nous semble plus se rapprocher d'un cas de la vie réelle.
+
 
 \subsection{Bash}
 
-La partie Bash du projet 2  a été plus simple a réaliser que celle de la partie 1.
+La partie Bash du projet 2  a été plus simple - réaliser que celle de la partie 1.
 Pour la partie 1, le nombre d'arguments rentrés pouvait modifier le fonctionnement des fonctions alors que dans la partie 2, le seul argument à entrer est le nom de la fonction appelée.
 
-Dans la partie 2, il suffit de récupérer le PID de \texttt{smalldb} et de lui envoyer un signal. Tandis que pour la partie 1 nous devions trouver le bon PID parmis les différents processus en cours, pour pouvoir lui envoyer le signal voulu. Cette recherche du bon PID demandait un traitement plus conséquent avant l'envoie du signal, par rapport au simple envoie du signal de la partie 2. 
+Dans la partie 2, il suffit de récupérer le PID de \texttt{smalldb} et de lui envoyer un signal. Tandis que pour la partie 1 nous devions trouver le bon PID parmi les différents processus en cours, pour pouvoir lui envoyer le signal voulu. Cette recherche du bon PID demandait un traitement plus conséquent avant l'envoie du signal, par rapport au simple envoie du signal de la partie 2. 
 
 \end{document}

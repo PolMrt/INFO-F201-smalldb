@@ -15,7 +15,7 @@ using namespace std;
 database_t *share_db_;
 bool *server_stopping_;
 
-void new_client(int new_socket, database_t *db, bool *server_stopping_ptr) {
+pthread_t new_client(int new_socket, database_t *db, bool *server_stopping_ptr) {
   sigset_t mask_int, mask_usr1;
   server_stopping_ = server_stopping_ptr;
   share_db_ = db;
@@ -33,6 +33,8 @@ void new_client(int new_socket, database_t *db, bool *server_stopping_ptr) {
   // Unblock signal in the main thread (here)
   unblock_sig(&mask_int);
   unblock_sig(&mask_usr1);
+
+  return tid;
 }
 
 void *thread_fct(void *ptr) {

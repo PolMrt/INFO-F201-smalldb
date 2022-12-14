@@ -19,6 +19,7 @@ using namespace std;
 
 int server_fd;
 vector<int> connections_sockets;
+vector<pthread_t> threads;
 database_t *share_db;
 bool server_stopping = false;
 
@@ -33,7 +34,9 @@ void signal_handler(int signal) {
       close(socket_id);
     }
 
-    // JOIN les threads
+    for (pthread_t tid: threads) {
+      pthread_join(tid, nullptr);
+    }
 
     db_save(share_db);
     close(server_fd);
@@ -81,7 +84,8 @@ int main(int argc, char const *argv[]) {
       // The connection to the client was successfull, now we create its thread
       // Save the file descriptor in a vector
       connections_sockets.push_back(new_socket);
-      new_client(new_socket, share_db, &server_stopping);
+      pthread_t tid = new_client(new_socket, share_db, &server_stopping);
+      threads.push_back(tid);
     } else {
       // An error occured while accepting socket
       if (errno != EINTR) {

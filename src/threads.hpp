@@ -1,7 +1,9 @@
 #ifndef _THREADS_HPP
 #define _THREADS_HPP
 
+#include <pthread.h>
 #include <signal.h>
+
 #include "db.hpp"
 
 /**
@@ -10,8 +12,9 @@
  * @param new_socket the fd of the new socket
  * @param db a pointer to the shared_db
  * @param server_stopping_ptr a pointer to the boolean saying wheter the server is stopping or not
+ * @return pthread_t the id of the created thread
  */
-void new_client(int new_socket, database_t *db, bool *server_stopping_ptr);
+pthread_t new_client(int new_socket, database_t *db, bool *server_stopping_ptr);
 
 /**
  * @brief The function that will be executed by each thread

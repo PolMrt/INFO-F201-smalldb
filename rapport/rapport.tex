@@ -33,19 +33,19 @@
 
 \section{Introduction}
 
-Ce projet est la prolongation de la première partie "tinydb" en prenant une nouvelle approche. Le but est le même : la réalisation d'une base de données en C++. Ici le serveur est différencié du client et communiquent ensemble via des sockets. Aussi, les requêtes des différents clients seront maitenant gérés par des threads individuels. Cette nouvelle approche soulève des questions concernant l'implémentation. Il faudra faire attention au niveau de l'accès concurrent à la base de données, trouver un moyen de passer les réponses au client, etc.
+Ce projet est la prolongation de la première partie "tinydb" en prenant une nouvelle approche. Le but est le même : la réalisation d'une base de données en C++. Ici le serveur est différencié du client et communiquent ensemble via des sockets. Aussi, les requêtes des différents clients seront maitenant gérées par des threads individuels. Cette nouvelle approche soulève des questions concernant l'implémentation. Il faudra faire attention au niveau de l'accès concurrent à la base de données, trouver un moyen de passer les réponses au client, etc.
 
-Dans ce rapport nous allons décrire notre implémentation, revenir sur certains points qui nous ont posés problèmes et comparer cette nouvelle implémentation à la précédente.
+Dans ce rapport nous allons décrire notre implémentation, revenir sur certains points qui nous ont posé problème et comparer cette nouvelle implémentation à la précédente.
 
 \section{Implémentation serveur client}
 
 \subsection{Implémentation des mutex}
 
-Pour éviter les accès concurrents à la base de données, nous avons du implémenter des mutex. Nous avons utilisé le pseudo-code fournit dans l'énoncé pour créer 4 fonctions qui sont appelés avant et après les lectures et les écritures. L'implémentations de celles-ci se trouve dans le fichier \texttt{guard.cpp}. Voici l'explication de son fonctionnement :
+Pour éviter les accès concurrents à la base de données, nous avons du implémenter des mutex. Nous avons utilisé le pseudo-code fournit dans l'énoncé pour créer 4 fonctions qui sont appelées avant et après les lectures et les écritures. L'implémentation de celles-ci se trouve dans le fichier \texttt{guard.cpp}. Voici l'explication de son fonctionnement :
 \begin{enumerate}
-	\item Nous créons une mutex \texttt{new\_access} qui sera utilisé pour bloquer le processus de registration du lecteur ou de l'écrivain. Elle sera bloqué au début de chaque fonction \texttt{\_before} et unlock à la fin,
+	\item Nous créons une mutex \texttt{new\_access} qui sera utilisée pour bloquer le processus de registration du lecteur ou de l'écrivain. Elle sera bloquée au début de chaque fonction \texttt{\_before} et unlock à la fin,
 	\item Nous créons une mutex \texttt{write\_access} qui permet de restreindre l'accès à un unique écrivain à la fois. La fonction \texttt{write\_guard\_before} la verrouillera et la fonction \texttt{write\_guard\_after} la déverrouillera,
-	\item Nous créons une mutex \texttt{reader\_registration} qui restreindra l'accès à la variable \texttt{readers\_count} pour éviter que deux threads la modifies en même temps,
+	\item Nous créons une mutex \texttt{reader\_registration} qui restreindra l'accès à la variable \texttt{readers\_count} pour éviter que deux threads la modifient en même temps,
 	\item Ensuite, dans la fonction \texttt{read\_guard\_before} on regarde s'il n'y a pas encore de lecteur, si c'est le cas, nous bloquerons l'écriture et incrémenterons le nombre de lecteur,
 	\item Finalement dans la fonction \texttt{read\_guard\_after} on décrémentera le nombre de lecteur et si celui-ci est maintenant à 0, nous déverrouillerons l'accès à l'écriture.
 \end{enumerate}
@@ -56,14 +56,14 @@ Cette approche peut sembler à première approche complexe. Mais celle-ci évite
 
 \subsubsection{Communication des résultats au client}
 
-Pour communiquer les résultats d'une requête envoyé par le client au serveur nous avons d'abord essayé de transmettre au client un structure \texttt{query\_result\_t}. Cette structure contins un \texttt{std::vector} des étudiants sélectionnés, la requête, le type de requête (SELECT, etc), l'état de la requête et éventuellement un message d'erreur. Nous avons donc essayé d'envoyer cette structure au client pour qu'il puisse lire les résultats de sa requête. Voici le bout de code que nous avons essayé :
+Pour communiquer les résultats d'une requête envoyée par le client au serveur nous avons d'abord essayé de transmettre au client un structure \texttt{query\_result\_t}. Cette structure contient un \texttt{std::vector} des étudiants sélectionnés, la requête, le type de requête (SELECT, etc), l'état de la requête et éventuellement un message d'erreur. Nous avons donc essayé d'envoyer cette structure au client pour qu'il puisse lire les résultats de sa requête. Voici le bout de code que nous avons essayé :
 \begin{lstlisting}
 write(socket, query_result, sizeof(query_result_t));
 \end{lstlisting}
 	
 	Nous n'avons pas réussi à faire fonctionner la communication avec cette approche. Nous en avons déduit que communiquer un \texttt{std::vector} via les sockets n'était pas trivial. Nous avons aussi essayé avec une liste dans le style de C (avec des pointeurs) mais le soucis restait.
 	
-	Nous avons donc opter pour une autre solution : envoyer ligne par ligne les résultats à imprimer chez le client. Nous avons défini un marqueur d'arrête (\texttt{**} en l'occurence) qui indiquera au client la fin des réponses a afficher dans le terminal. Cette solution fonctionne mais nous laisse perplexe au niveau de la charge réseaux, une autre implémentation nécessitant moins de \texttt{read} et \texttt{write} pourrait être optimal. Voici un bout de code de notre implémentation :
+	Nous avons donc opté pour une autre solution : envoyer ligne par ligne les résultats à imprimer chez le client. Nous avons défini un marqueur d'arrête (\texttt{**} en l'occurence) qui indiquera au client la fin des réponses à afficher dans le terminal. Cette solution fonctionne mais nous laisse perplexe au niveau de la charge réseaux, une autre implémentation nécessitant moins de \texttt{read} et \texttt{write} pourrait être optimal. Voici un bout de code de notre implémentation :
 
 \begin{lstlisting}
 // Server
@@ -83,7 +83,7 @@ while ((bytes_read = read(sock, response_buffer, 1024)) > 0
 
 \subsubsection{Nombre d'étudiants supprimés}
 
-Quand un client exécute la requête \texttt{delete filter=value}, le serveur supprime les éléments et renvoie au client \texttt{n student(s) deleted}. Le code fournit pour ce projet contenait déjà la logique de la fonction delete mais pas un moyen de récupérer facilement le nombre d'étudiant supprimé. Cette fonction utilise \texttt{remove\_if} qui retourne un itérateur sur le vecteur. Pour compter les éléments nous avons itéré sur les éléments supprimés pour les compter. Voici un bout de code de l'implémentation :
+Quand un client exécute la requête \texttt{delete filter=value}, le serveur supprime les éléments et renvoie au client \texttt{n student(s) deleted}. Le code fournit pour ce projet contenait déjà la logique de la fonction delete mais pas un moyen de récupérer facilement le nombre d'étudiants supprimés. Cette fonction utilise \texttt{remove\_if} qui retourne un itérateur sur le vecteur. Pour compter les éléments nous avons itéré sur les éléments supprimés pour les compter. Voici un bout de code de l'implémentation :
 
 \begin{lstlisting}
 auto new_end = remove_if(db->data.begin(), db->data.end(), predicate);
@@ -95,9 +95,9 @@ for (auto s = new_end; s != db->data.end(); ++s) {
 
 \subsubsection{Communication sur différentes machines}
 
-Nous avons rencontré un problème lors de nos tests sur différentes machines : quand un des deux ordinateur est un serveur (\texttt{smalldb}) et que l'autre est le client (\texttt{sdbsh}).
+Nous avons rencontré un problème lors de nos tests sur différentes machines : quand un des deux ordinateurs est un serveur (\texttt{smalldb}) et que l'autre est le client (\texttt{sdbsh}).
 
-Dans un premier temps, nous avons testé sur un partage de connexion fait via un iPhone mais tous les résultats retournés par le serveur étaient étranges.
+Dans un premier temps, nous avons testé sur un partage de connexion fait via un iPhone mais certains des résultats retournés par le serveur étaient étranges.
 
 \begin{figure}[ht]
 	\includegraphics[scale=0.6]{assets/char-iphone.png}
@@ -105,7 +105,7 @@ Dans un premier temps, nous avons testé sur un partage de connexion fait via un
 	\label{fig:char_iphone}
 \end{figure}
 
-Nous nous sommes dits que cela pouvait être une limitation du routeur interne à l'iPhone lors du partage de connexion. Pour tester d'une autre manière nous avons donc lancé \texttt{smalldb} sur un serveur distant loué chez Hetzner pour l'occasion. Nous arrivons à nous connecter correctement sur ce serveur distant, nous arrivons aussi à sélectionner des étudiants et ceux-ci s'affichent bien. Cependant, à la fin du select des caractères étranges s'affichent, principalement quand le select retourne plus d'un étudiant.
+Nous nous sommes dit que cela pouvait être une limitation du routeur interne à l'iPhone lors du partage de connexion. Pour tester d'une autre manière nous avons donc lancé \texttt{smalldb} sur un serveur distant loué chez Hetzner pour l'occasion. Nous arrivons à nous connecter correctement sur ce serveur distant, nous arrivons aussi à sélectionner des étudiants et ceux-ci s'affichent bien. Cependant, à la fin du select des caractères étranges s'affichent, principalement quand le select retourne plus d'un étudiant.
 
 \begin{lstlisting}
 > ./sdbsh 142.132.176.27
@@ -138,7 +138,7 @@ kill -SIGINT $pid
 }
 \end{lstlisting}
 
-Un signal SIGUSR1 pour la fonction sync (sauvegarde la base de donnée sur le disque):
+Un signal SIGUSR1 pour la fonction sync (sauvegarde la base de données sur le disque):
 
 \begin{lstlisting}
 sync(){
@@ -155,7 +155,7 @@ sed 's/>//g' | cut -d: -f1 | sed '1d'
 }
 \end{lstlisting}
 
-Les paramètres utilisés dans la fonction lsof sont expliqué dans le fichier \texttt{smalldbctl} et le problèmes rencontrés sont quant à eux expliqués dans la sous-section ci-dessous.
+Les paramètres utilisés dans la fonction lsof sont expliqués dans le fichier \texttt{smalldbctl} et les problèmes rencontrés sont quant à eux expliqués dans la sous-section ci-dessous.
 
 \subsection{Difficultés rencontrées}
 
@@ -163,7 +163,7 @@ Lors de la création de la fonction \texttt{list}, un problème est survenu avec
 
 Nous avons donc dû trouver une autre commande nous permettant de récupérer l'IP du client.
 
-Après de longues heures de recherche nous avons trouvé la commande \textt{lsof}. Mais un nouveau problème apparu, il fallait trier les informations que la commande \textt{lsof} affichait. Nous avons trouver grâce à des forums (dont Stack Overflow) comment récupérer ce que \texttt{lsof} affichait, comment en extraire la partie voulue, la séparer à partir d'un certain symbole ("-" dans notre cas) et aussi comment sélectionner la bonne partie après un cut. Après ça il nous restait plus qu'à retirer l'astérisque qui s'affichait avant les IP à l'aide la commande \texttt{sed/'1d'} qui retire la première ligne de notre echo (en bash).
+Après de longues heures de recherche nous avons trouvé la commande \texttt{lsof}. Mais un nouveau problème apparu, il fallait trier les informations que la commande \texttt{lsof} affichait. Nous avons trouver grâce à des forums (dont Stack Overflow) comment récupérer ce que \texttt{lsof} affichait, comment en extraire la partie voulue, la séparer à partir d'un certain symbole ("-" dans notre cas) et aussi comment sélectionner la bonne partie après un cut. Après ça il ne nous restait plus qu'à retirer l'astérisque qui s'affichait avant les IP à l'aide la commande \texttt{sed/'1d'} qui retire la première ligne de notre echo (en bash).
 
 \section{Tests additionnels}
 
@@ -185,7 +185,7 @@ Dans cette nouvelle partie, nous exécutons les requêtes des clients de manièr
 \subsection{Bash}
 
 La partie Bash du projet 2  a été plus simple a réaliser que celle de la partie 1.
-Pour la partie 1, le nombre d'arguments rentrés pouvait modifier le fonctionnement des fonctions alors que dans la partie 2, le seul argument à entrer est le nom de la fonction appelée.
+Pour la première partie, le nombre d'arguments rentrés pouvait modifier le comportement des fonctions alors que dans la seconde partie, le seul argument à entrer est le nom de la fonction appelée.
 
 Dans la partie 2, il suffit de récupérer le PID de \texttt{smalldb} et de lui envoyer un signal. Tandis que pour la partie 1 nous devions trouver le bon PID parmis les différents processus en cours, pour pouvoir lui envoyer le signal voulu. Cette recherche du bon PID demandait un traitement plus conséquent avant l'envoie du signal, par rapport au simple envoie du signal de la partie 2. 
 

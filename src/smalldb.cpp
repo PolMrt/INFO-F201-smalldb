@@ -31,10 +31,14 @@ void signal_handler(int signal) {
     cout << "smalldb: stopping the server..." << endl;
 
     for (auto socket_threads: connections_sockets_threads) {
-      cout << "smalldb: Closing connection " + to_string(socket_threads.first) << endl;
-      close(socket_threads.first);
-      cout << "smalldb: Closing thread for connection " + to_string(socket_threads.first) << endl;
-      // pthread_join(socket_threads.second, nullptr);
+      // Try to close to socket to see if the conenction is still live
+      // close returns 0 when it was successfull
+      int closed = close(socket_threads.first);
+      if (closed == 0) {
+        cout << "smalldb: Closing connection " + to_string(socket_threads.first) << endl;
+        cout << "smalldb: Closing thread for connection " + to_string(socket_threads.first) << endl;
+      }
+        pthread_join(socket_threads.second, nullptr);
     }
     db_save(share_db);
     close(server_fd);

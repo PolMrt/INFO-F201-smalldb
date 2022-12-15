@@ -19,7 +19,7 @@
 using namespace std;
 
 int server_fd;
-vector< pair<int *, pthread_t> > connections_sockets_threads;
+vector< pair<int *, pthread_t *> > connections_sockets_threads;
 database_t *share_db;
 bool server_stopping = false;
 
@@ -38,10 +38,17 @@ void signal_handler(int signal) {
         cout << "smalldb: Closing connection " + to_string(*socket_threads.first) << endl;
         cout << "smalldb: Closing thread for connection " + to_string(*socket_threads.first) << endl;
       }
-        pthread_join(socket_threads.second, nullptr);
+      pthread_join(*socket_threads.second, nullptr);
     }
     db_save(share_db);
     close(server_fd);
+
+    // Delete pointer inside the vector
+    for (auto socket_threads: connections_sockets_threads) {
+      delete socket_threads.first;
+      delete socket_threads.second;
+    }
+
     exit(EXIT_SUCCESS);
   } else if (signal == SIGUSR1) {
     cout << "smalldb: saving the database" << endl;
@@ -85,7 +92,7 @@ int main(int argc, char const *argv[]) {
     if (*new_socket > 0) {
       // The connection to the client was successfull, now we create its thread
       // Save the file descriptor & thread id in a vector
-      pthread_t tid = new_client(new_socket, share_db, &server_stopping);
+      pthread_t *tid = new pthread_t(new_client(new_socket, share_db, &server_stopping));
       connections_sockets_threads.push_back(make_pair(new_socket, tid));
     } else {
       // An error occured while accepting socket

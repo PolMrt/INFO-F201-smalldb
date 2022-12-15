@@ -142,7 +142,7 @@ kill -SIGINT $pid
 }
 \end{lstlisting}
 
-Un signal \texttt{SIGUSR1} pour la fonction sync (sauvegarde la base de donnée sur le disque) :
+Un signal \texttt{SIGUSR1} pour la fonction sync (sauvegarde la base de données sur le disque) :
 
 \begin{lstlisting}
 sync(){
@@ -198,6 +198,6 @@ Le fait de paralléliser les requêtes des clients au lieu de paralléliser les 
 La partie Bash du projet 2  a été plus simple - réaliser que celle de la partie 1.
 Pour la première partie, le nombre d'arguments rentrés pouvait modifier le comportement des fonctions alors que dans la seconde partie, le seul argument à entrer est le nom de la fonction appelée.
 
-Dans la partie 2, il suffit de récupérer le PID de \texttt{smalldb} et de lui envoyer un signal. Tandis que pour la partie 1 nous devions trouver le bon PID parmi les différents processus en cours, pour pouvoir lui envoyer le signal voulu. Cette recherche du bon PID demandait un traitement plus conséquent avant l'envoie du signal, par rapport au simple envoie du signal de la partie 2. 
+Dans la seconde partie, il suffit de récupérer le PID de \texttt{smalldb} et de lui envoyer un signal. Tandis que pour la partie 1 nous devions trouver le bon PID parmi les différents processus en cours, pour pouvoir lui envoyer le signal voulu. Cette recherche du bon PID demandait un traitement plus conséquent avant l'envoie du signal, par rapport au simple envoie du signal de la partie 2. 
 
 \end{document}

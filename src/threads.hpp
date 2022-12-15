@@ -14,7 +14,7 @@
  * @param server_stopping_ptr a pointer to the boolean saying wheter the server is stopping or not
  * @return pthread_t the id of the created thread
  */
-pthread_t new_client(int new_socket, database_t *db, bool *server_stopping_ptr);
+pthread_t new_client(int *new_socket, database_t *db, bool *server_stopping_ptr);
 
 /**
  * @brief The function that will be executed by each thread

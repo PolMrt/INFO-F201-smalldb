@@ -16,7 +16,7 @@ using namespace std;
 database_t *share_db_;
 bool *server_stopping_;
 
-pthread_t new_client(int new_socket, database_t *db, bool *server_stopping_ptr) {
+pthread_t new_client(int *new_socket, database_t *db, bool *server_stopping_ptr) {
   sigset_t mask_int, mask_usr1;
   server_stopping_ = server_stopping_ptr;
   share_db_ = db;
@@ -27,13 +27,13 @@ pthread_t new_client(int new_socket, database_t *db, bool *server_stopping_ptr) 
 
   // Creating the thread
   pthread_t tid;
-  int ptread_success = pthread_create(&tid, NULL, thread_fct, &new_socket);
+  int ptread_success = pthread_create(&tid, NULL, thread_fct, new_socket);
   if (ptread_success != 0) {
-    string msg = "sdbsh: error: an error occured while creating a thread for client " + to_string(new_socket);
+    string msg = "sdbsh: error: an error occured while creating a thread for client " + to_string(*new_socket);
     perror(msg.c_str());
   }
 
-  cout << "smalldb: Accepted connection (" + to_string(new_socket) + ")" << endl;
+  cout << "smalldb: Accepted connection (" + to_string(*new_socket) + ")" << endl;
 
   // Unblock signal in the main thread (here)
   unblock_sig(&mask_int);

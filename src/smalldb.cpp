@@ -19,7 +19,7 @@
 using namespace std;
 
 int server_fd;
-vector< pair<int, pthread_t> > connections_sockets_threads;
+vector< pair<int *, pthread_t> > connections_sockets_threads;
 database_t *share_db;
 bool server_stopping = false;
 
@@ -33,10 +33,10 @@ void signal_handler(int signal) {
     for (auto socket_threads: connections_sockets_threads) {
       // Try to close to socket to see if the conenction is still live
       // close returns 0 when it was successfull
-      int closed = close(socket_threads.first);
+      int closed = close(*socket_threads.first);
       if (closed == 0) {
-        cout << "smalldb: Closing connection " + to_string(socket_threads.first) << endl;
-        cout << "smalldb: Closing thread for connection " + to_string(socket_threads.first) << endl;
+        cout << "smalldb: Closing connection " + to_string(*socket_threads.first) << endl;
+        cout << "smalldb: Closing thread for connection " + to_string(*socket_threads.first) << endl;
       }
         pthread_join(socket_threads.second, nullptr);
     }
@@ -81,8 +81,8 @@ int main(int argc, char const *argv[]) {
   size_t addrlen = sizeof(address);
 
   while (1) {
-    int new_socket = int(accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen));
-    if (new_socket > 0) {
+    int *new_socket = new int(accept(server_fd, (struct sockaddr *)&address, (socklen_t *)&addrlen));
+    if (*new_socket > 0) {
       // The connection to the client was successfull, now we create its thread
       // Save the file descriptor & thread id in a vector
       pthread_t tid = new_client(new_socket, share_db, &server_stopping);

@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 3
 
     steps:
       - uses: actions/checkout@v3
@@ -13,7 +13,19 @@ jobs:
         run: |
           cd src
           make
-      - name: Run tests
+      - name: Run tests (1/3)
+        run: |
+          cd tests
+          bash ./run_tests.sh
+        env:
+          CI: true
+      - name: Run tests (2/3)
+        run: |
+          cd tests
+          bash ./run_tests.sh
+        env:
+          CI: true
+      - name: Run tests (3/3)
         run: |
           cd tests
           bash ./run_tests.sh

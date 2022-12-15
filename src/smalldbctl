@@ -3,20 +3,43 @@
 #in terminal
 #syntax is : smalldbctl {1 arg}
 
+
+#Projet : SmallDB
+#Section : B-INFO2
+#Cours : INFO-F-201
+#Auteurs :
+    #Pol Marnette, matricule : 000495639
+    #Romain Markowitch, matricule : 000540172
+    #Jeremy Hennebicq, matricule : 000539137
+#Date : 16/12/2022
+
+
+
+pid=`pgrep smalldb` # get the PID of the process of the database
+
+# Display the IP adresses of all the clients connected to the server
 list(){
-pid=`pgrep smalldb`
-lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d: -f1 | sed 's/*//g'
-#
-#
+lsof -i -P -n | grep "$pid" | awk '{print $9}' | cut -d- -f2 | sed 's/>//g' | cut -d: -f1 | sed '1d'
+# lsof : used to list open files, including network connections
+# -i : tells lsof to display only network connections
+# -P and -n : display the numerical IP addresses and port numbers
+# awk : extract the desired information from the output of grep 
+# awk '{print $9}' : print the 9th field of each line of the output (the remote IP address of each connection associated with the process)
+# cut : extract a specific field or range of fields from the output of awk
+    # -d-: :specifies the delimiter to use for dividing the input into fields ("-" in our case)
+    # -f2 : specifies the field or fields to extract (in our case, 2)
+# sed 's/>//g' : search and replace text in the output of cut, 's' is used to search for '>' and 'g' to replace it by an empty string
+# cut -d: -f1 : delimiter (":"), extract the field 1 (first)
+# sed '1d' : remove the first line (which is a '*')
 }
 
+# Send a signal SIGUSR1 to the process of the database
 sync(){
-pid=`pgrep smalldb`
 kill -SIGUSR1 $pid
 }
 
+# Send a signal SIGINT to the process of the database
 stop(){
-pid=`pgrep smalldb`
 kill -SIGINT $pid
 }
 $1

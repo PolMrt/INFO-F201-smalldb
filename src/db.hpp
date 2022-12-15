@@ -13,10 +13,6 @@ struct database_t {
   const char*            path; /** DB path */
 };
 
-// Nous utilisons un std::vector ici pour ne pas avoir à gérer le code
-// d'extension de la mémoire. Cela a déjà été présenté dans le premier
-// projet et dans les tps. Nous nous concentrons ici sur d'autres choses.
-
 /**
  * Initialize db with the content of file at path
  **/

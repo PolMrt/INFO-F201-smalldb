@@ -4,11 +4,10 @@ LDLIBS+=-lpthread
 SOURCES = $(wildcard *.cpp */*.cpp)
 HEADERS = $(wildcard *.hpp */*.hpp)
 
-OBJ=db.o student.o queries.o socket.o guard.o sig.o
+OBJ=db.o student.o queries.o socket.o guard.o sig.o threads.o
 
 .PHONY: main
 main: smalldb sdbsh
-# main: smalldb check run
 
 smalldb: smalldb.cpp ${OBJ}
 	$(CXX) $(LDFLAGS) $^ -o $@ $(LOADLIBES) $(LDLIBS)

@@ -18,6 +18,7 @@ for f in queries/*.txt ; do
 
     echo ">>> lance le serveur"
     ../src/smalldb "${db}" &
+    sleep 0.5
     if ! pidof -q smalldb ; then
         echo "Impossible de lancer le serveur"
         exit 1

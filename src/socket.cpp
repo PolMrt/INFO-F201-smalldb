@@ -32,16 +32,24 @@ void send_query_result(int socket, const query_result_t &query_result) {
   if (query_result.status == QUERY_SUCCESS) {
     if (query_result.type == QUERY_SELECT || query_result.type == QUERY_INSERT) {
       // If select or insert, send students to client
-      for (auto student: query_result.students) {
-        student_to_str(buffer_response, &student, 1024);
+      for (size_t i = 0; i < query_result.students.size(); i++) {
+        student_to_str(buffer_response, &query_result.students[i], 1024);
         check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
-        snprintf(buffer_response, 1024, "\n");
-        check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
+
+        if (i != query_result.students.size() - 1) {
+          snprintf(buffer_response, 1024, "\n");
+          check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
+        }
       }
     }
 
     if (query_result.type != QUERY_INSERT) {
       // If not insert, show a nb of students impacted by the request
+      if (query_result.type == QUERY_SELECT) {
+        snprintf(buffer_response, 1024, "\n");
+        check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
+      } 
+      
       snprintf(buffer_response, 1024, "%d student(s) %s", static_cast<int>(query_result.students.size()), get_query_type(query_result).c_str());
       check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
     }

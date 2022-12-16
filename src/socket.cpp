@@ -36,7 +36,7 @@ void send_query_result(int socket, const query_result_t &query_result) {
         student_to_str(buffer_response, &query_result.students[i], 1024);
         check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
 
-        if (i != query_result.students.size() - 1) {
+        if (i != query_result.students.size() - 1 || query_result.type == QUERY_SELECT) {
           snprintf(buffer_response, 1024, "\n");
           check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
         }
@@ -44,12 +44,7 @@ void send_query_result(int socket, const query_result_t &query_result) {
     }
 
     if (query_result.type != QUERY_INSERT) {
-      // If not insert, show a nb of students impacted by the request
-      if (query_result.type == QUERY_SELECT) {
-        snprintf(buffer_response, 1024, "\n");
-        check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
-      } 
-      
+      // If not insert, show a nb of students impacted by the request      
       snprintf(buffer_response, 1024, "%d student(s) %s", static_cast<int>(query_result.students.size()), get_query_type(query_result).c_str());
       check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
     }

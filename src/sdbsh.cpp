@@ -47,7 +47,9 @@ int main(int argc, char const *argv[]) {
       size_t end_marker_length = RESULT_END_MARKER.length();
 
       while ((bytes_read = read(sock, response_buffer, 1024)) > 0) {
-        response_buffer[1023] = '\0';
+        // Add \0 to the end of the received data
+        response_buffer[bytes_read] = '\0';
+        // cout << ">>>>>>" << response_buffer << "<<<<<" << endl;
         response += response_buffer;
         
         // Check if last char == END_MARKER, if so, break and remove the marker

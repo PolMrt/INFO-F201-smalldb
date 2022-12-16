@@ -35,6 +35,7 @@ void send_query_result(int socket, const query_result_t &query_result) {
       for (auto student: query_result.students) {
         student_to_str(buffer_response, &student, 1024);
         check_read_write(write(socket, buffer_response, 1024), error_message_write, socket);
+        check_read_write(write(socket, "\n", 1024), error_message_write, socket);
       }
     }
 

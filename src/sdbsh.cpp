@@ -47,8 +47,9 @@ int main(int argc, char const *argv[]) {
       size_t end_marker_length = RESULT_END_MARKER.length();
 
       while ((bytes_read = read(sock, response_buffer, 1024)) > 0) {
+        response_buffer[1023] = '\0';
         response += response_buffer;
-
+        
         // Check if last char == END_MARKER, if so, break and remove the marker
         if ((response.length() > 2 && response.substr(response.length() - end_marker_length) == RESULT_END_MARKER)) {
           response.erase(response.end() - end_marker_length, response.end());

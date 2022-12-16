@@ -46,7 +46,7 @@ Pour éviter les accès concurrents à la base de données, nous avons du implé
 
 \begin{enumerate}
 	\item Nous créons une mutex \texttt{new\_access} qui sera utilisée pour bloquer le processus de registration du lecteur ou de l'écrivain. Elle sera bloquée au début de chaque fonction \texttt{\_before} et unlock à la fin,
-	\item Nous créons une mutex \texttt{write\_access} qui permet de restreindre l'accès à un unique écrivain à la fois. La fonction \texttt{write\_guard\_before} la verrouillera et la fonction \texttt{write\_guard\_after} la déverrouillera,
+	\item Nous créons une mutex \texttt{write\_access} qui permet de restreindre l'accès à un unique écrivain à la fois. La fonction \texttt{write\_guard\_before} la verrouillera et la fonction et \texttt{write\_guard\_after} la déverrouillera,
 	\item Nous créons une mutex \texttt{reader\_registration} qui restreindra l'accès à la variable \texttt{readers\_count} pour éviter que deux threads la modifient en même temps,
 	\item Ensuite, dans la fonction \texttt{read\_guard\_before} on regarde s'il n'y a pas encore de lecteur, si c'est le cas, nous bloquerons l'écriture et incrémenterons le nombre de lecteur,
 	\item Finalement dans la fonction \texttt{read\_guard\_after} on décrémentera le nombre de lecteur et si celui-ci est maintenant à 0, nous déverrouillerons l'accès à l'écriture.
@@ -165,7 +165,7 @@ Les paramètres utilisés dans la fonction \texttt{lsof} sont expliqués dans le
 
 \subsection{Difficultés rencontrées}
 
-Lors de la création de la fonction \texttt{list}, un problème est survenu avec l'affichage de l'adresse IP. La commande \textt{ss} était introuvable sur Mac et \texttt{netstat} ne fonctionnait pas avec les options nécessaires pour récupérer l'IP voulu.
+Lors de la création de la fonction \texttt{list}, un problème est survenu avec l'affichage de l'adresse IP. La commande \texttt{ss} était introuvable sur macOS et \texttt{netstat} ne fonctionnait pas avec les options nécessaires pour récupérer l'IP voulue.
 
 Nous avons donc dû trouver une autre commande nous permettant de récupérer l'IP du client.
 
@@ -173,15 +173,15 @@ Après de longues heures de recherche nous avons trouvé la commande \texttt{lso
 
 \section{Tests additionnels}
 
-Afin de tester notre implémentation, nous avons dans un premier temps créé une "Github Action" pour compiler afin tester notre code à chaque nouveaux commit. Celui-ci se contentait de lancer \texttt{make} afin de compiler le code et lançait ensuite le script bash fournit qui contient les différents tests. Dans un second temps, comme mentionné dans la partie sur les difficultés rencontrés, nous avons déployé la partie \texttt{smalldb} (le serveur) sur une machine virtuelle distante pour tester notre code dans des conditions plus concrètes.
+Afin de tester notre implémentation, nous avons dans un premier temps créé une "Github Action" pour compiler afin tester notre code à chaque nouveaux commit. Celui-ci se contentait de lancer \texttt{make} afin de compiler le code et lançait ensuite le script bash fournit qui contient les différents tests. Dans un second temps, comme mentionné dans la partie sur les difficultés rencontrées, nous avons déployé la partie \texttt{smalldb} (le serveur) sur une machine virtuelle distante pour tester notre code dans des conditions plus concrètes.
 
-Concernant le fichier \texttt{/tests/run\_tests.sh}, nous avons ajouté un \texttt{sleep 0.5} entre le lancement du serveur et du client car sinon, le client se lançait avant que le serveur n'ait eu le temps de commencer à accepter de nouvelles connections. Ceci provoquait alors une erreur lors des tests en fonction de la machine sur laquelle ceux-ci étaient lancés.
+Concernant le fichier \texttt{/tests/run\_tests.sh}, nous avons ajouté un \texttt{sleep 0.5} entre le lancement du serveur et du client car sinon, le client se lançait avant que le serveur n'ait eu le temps de commencer à accepter de nouvelles connexions. Ceci provoquait alors une erreur lors des tests en fonction de la machine sur laquelle ceux-ci étaient lancés.
 
 \section{Comparaison avec la première partie}
 
 \subsection{Pipe et sockets}
 
-Un des changements majeur qu'apporte la seconde partie du projet est la communication via sockets entre le client et le serveur. Dans la première partie, nous utilisions les pipes, non pas pour communiquer entre le client et le serveur mais pour communiquer entre les processus gérants les requêtes et le processus principale qui communique avec l'utilisateur.
+Un des changements majeurs qu'apporte la seconde partie du projet est la communication via sockets entre le client et le serveur. Dans la première partie, nous utilisions les pipes, non pas pour communiquer entre le client et le serveur mais pour communiquer entre les processus gérants les requêtes et le processus principale qui communique avec l'utilisateur.
 
 Cette nouvelle approche se rapproche plus de ce que l'on pourrait retrouver en réalité avec un serveur distant du client.
 
@@ -197,7 +197,7 @@ Le fait de paralléliser les requêtes des clients au lieu de paralléliser les 
 
 \subsection{Bash}
 
-La partie Bash du projet 2  a été plus simple - réaliser que celle de la partie 1.
+La partie Bash du projet 2  a été plus simple à réaliser que celle de la partie 1.
 Pour la première partie, le nombre d'arguments rentrés pouvait modifier le comportement des fonctions alors que dans la seconde partie, le seul argument à entrer est le nom de la fonction appelée.
 
 Dans la seconde partie, il suffit de récupérer le PID de \texttt{smalldb} et de lui envoyer un signal. Tandis que pour la partie 1 nous devions trouver le bon PID parmi les différents processus en cours, pour pouvoir lui envoyer le signal voulu. Cette recherche du bon PID demandait un traitement plus conséquent avant l'envoie du signal, par rapport au simple envoie du signal de la partie 2. 

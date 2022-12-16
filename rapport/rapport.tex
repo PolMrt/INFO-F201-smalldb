@@ -20,7 +20,7 @@
 
 \title{INFO-F201 SmallDB : rapport}
 \author{HENNEBICQ Jérémy\and MARKOWITCH Romain \and MARNETTE Pol}
-\date{10 décembre 2022}
+\date{16 décembre 2022}
 
 \renewcommand{\contentsname}{Table des matières}
 \begin{document}
@@ -54,7 +54,7 @@ Pour éviter les accès concurrents à la base de données, nous avons du implé
 
 Cette approche empêche les écrivains de bloquer les lecteurs en permettant aux lecteurs de continuer à accéder à la base de données tant qu'il y a des lecteurs en cours d'exécution. Lorsqu'un lecteur termine, il décrémente le compteur de lecteurs et, s'il est égal à zéro, débloque l'accès en écriture pour les écrivains. De cette manière, cette implémentation de mutex permet d'éviter les problèmes de famine en gérant de manière efficace l'accès en lecture/écriture à la base de données.
 
-\subsection{Difficultés rencontrés}
+\subsection{Difficultés rencontrées}
 
 \subsubsection{Communication des résultats au client}
 
@@ -67,7 +67,7 @@ write(socket, &query_result, sizeof(query_result_t));
 	
 	Nous n'avons pas réussi à faire fonctionner la communication avec cette approche. Nous en avons déduit que communiquer un \texttt{std::vector} via les sockets n'était pas trivial. Nous avons aussi essayé avec une liste dans le style de C (avec des pointeurs) mais le soucis restait.
 	
-	Nous avons donc opté pour une autre solution : envoyer ligne par ligne les résultats à imprimer chez le client. Nous avons défini un marqueur d'arrête (\texttt{**} en l'occurence) qui indiquera au client la fin des réponses à afficher dans le terminal. Cette solution fonctionne mais nous laisse perplexe au niveau de la charge réseaux et du nombre d'appels système. Une autre implémentation nécessitant moins de \texttt{read} et \texttt{write} pourrait être plus optimal. Voici une illustration de notre implémentation :
+	Dans uns second temps, nous avons opté pour une autre solution : envoyer ligne par ligne les résultats à imprimer chez le client. Nous avons défini un marqueur d'arrête (\texttt{**} en l'occurence) qui indiquera au client la fin des réponses à afficher dans le terminal. Cette solution fonctionne mais nous laisse perplexe au niveau de la charge réseaux et du nombre d'appels système. Une autre implémentation nécessitant moins de \texttt{read} et \texttt{write} pourrait être plus optimal. Voici une illustration de notre implémentation :
 
 \begin{lstlisting}
 // Server
@@ -84,6 +84,8 @@ while ((bytes_read = read(sock, response_buffer, 1024)) > 0
 	std::cout << response_buffer << std::endl;
 }
 \end{lstlisting}
+
+Afin d'essayer de résoudre un problème d'affichage lors de l'envoi en réseau (plus d'information à ce sujet dans la section dédiée), nous avons revu cette approche pour ne pas afficher dans le terminal chaque \texttt{read} mais de l'ajouter à un string \texttt{response} et une fois le marqueur détecté à la fin de ce string, afficher \texttt{response} dans le terminal.
 
 \subsubsection{Nombre d'étudiants supprimés}
 
@@ -127,7 +129,7 @@ V
 
 Les deux \texttt{V} qui s'affichent ne sont pas attendus. Aussi, le client n'arrive pas à détecter que le serveur a fini de lui retourner les résultats et il n'est alors pas possible de renvoyer une nouvelle requête via le client.
 
-Nous n'avons pas trouvé de solution à ce problème.
+Nous avons tenté de résoudre ce problème en modifiant la manière dont le client reçoit et affiche les résultats (comme détaillés dans le point "Communication des résultats au client") mais ceci n'a pas résolu le problème. Cette solution nous a seulement permis d'éviter l'affichage des caractères spéciaux mais le client restera bloqué et aucune autre requête ne pourra être envoyée.
 
 
 \section{Bash}
